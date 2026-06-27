@@ -1466,7 +1466,7 @@ function selectColor(el) {
 
 addServiceRow();
 
-function buildDashboard() {
+async function buildDashboard() {
   const cur = document.getElementById('s_currency').value;
   config.currency = cur === 'other' ? (document.getElementById('s_currency_custom').value || '£') : cur;
   config.brand = document.getElementById('s_brand').value.trim() || 'Dash OS';
@@ -1494,16 +1494,149 @@ function buildDashboard() {
   }
   const selected = document.querySelector('.color-swatch.selected');
   if (selected) { config.accentColor = selected.dataset.color; config.accentRgb = selected.dataset.rgb; }
+
+  // Show loading state
+  document.getElementById('setup-overlay').classList.add('hidden');
   applyTheme();
-  populateDiagnosis();
-  populatePlan();
+  showLoadingState();
+
+  // Call AI intake
+  try {
+    const response = await fetch('/api/insight', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ config })
+    });
+
+    const aiData = await response.json();
+
+    if (aiData.error) throw new Error(aiData.error);
+
+    // Render AI output
+    populateDiagnosisFromAI(aiData);
+    populatePlanFromAI(aiData);
+
+  } catch (error) {
+    console.error('AI intake failed, falling back to template:', error);
+    populateDiagnosis();
+    populatePlan();
+  }
+
   populateRoadmap();
   populateCalc();
   populateVision();
   loadNotes();
   saveConfig();
+  hideLoadingState();
 }
 
+function showLoadingState() {
+  const hero = document.querySelector('.hero');
+  if (hero) {
+    hero.insertAdjacentHTML('beforeend', `
+      <div id="ai-loading" style="
+        position:absolute;inset:0;background:rgba(255,255,255,0.92);
+        display:flex;flex-direction:column;align-items:center;justify-content:center;
+        gap:14px;z-index:10;border-radius:0;
+      ">
+        <div style="display:flex;gap:6px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:#1a5fc8;animation:loadpulse 1.2s ease-in-out infinite;"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:#1a5fc8;animation:loadpulse 1.2s ease-in-out 0.2s infinite;"></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:#1a5fc8;animation:loadpulse 1.2s ease-in-out 0.4s infinite;"></div>
+        </div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:13px;color:#999;letter-spacing:0.04em;">
+          Building your audit…
+        </div>
+      </div>
+      <style>
+        @keyframes loadpulse {
+          0%,100%{transform:scale(1);opacity:0.4;}
+          50%{transform:scale(1.4);opacity:1;}
+        }
+      </style>
+    `);
+  }
+}
+
+function hideLoadingState() {
+  document.getElementById('ai-loading')?.remove();
+}
+
+function populateDiagnosisFromAI(ai) {
+  const c = config;
+  const gap = Math.max(0, c.targetLow - c.revNow);
+  const net = c.revNow - c.costNow;
+
+  document.getElementById('stat-rev').textContent = c.revNow ? fmt(c.revNow) : '—';
+  document.getElementById('stat-cost').textContent = c.costNow ? fmt(c.costNow) : '—';
+  document.getElementById('stat-target').textContent = c.targetLow ? `${fmt(c.targetLow)}–${fmt(c.targetHigh)}` : '—';
+  document.getElementById('stat-gap').textContent = gap ? fmt(gap) : '—';
+  document.getElementById('stat-rev-note').textContent = net < 0
+    ? `Net: ${fmt(net)} — operating at a loss`
+    : `Net: ${fmt(net)} after main cost`;
+
+  renderDiagTableFromAI('diag-problem', ai.problemRows);
+  renderDiagTableFromAI('diag-assets', ai.assetRows);
+  renderDiagTableFromAI('diag-gap', ai.gapRows);
+  renderDiagTableFromAI('diag-opportunity', ai.opportunityRows);
+
+  document.getElementById('insight-bar').innerHTML = `"${ai.insightQuote}"`;
+}
+
+function renderDiagTableFromAI(id, rows) {
+  if (!rows || !rows.length) return;
+  const t = document.getElementById(id);
+  t.innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.key}</td>
+      <td>${r.value}${r.pill ? ` <span class="pill ${r.pill}">${r.pill === 'red' ? '⚠' : '✓'}</span>` : ''}</td>
+    </tr>
+  `).join('');
+}
+
+function populatePlanFromAI(ai) {
+  buildPricingTable();
+
+  const wrap = document.getElementById('phases-wrap');
+  const phases = [
+    { title: 'Stabilise — Stop the Bleed', months: 'Months 1–2', goal: 'Cover costs. Prove the model works.', actions: ai.phase1Actions, pClass: 'p1' },
+    { title: 'Build — Signal and Systems', months: 'Months 3–5', goal: 'Make the business discoverable and repeatable.', actions: ai.phase2Actions, pClass: 'p2' },
+    { title: 'Scale — Build Beyond Yourself', months: 'Months 6–12', goal: "Build a business that doesn't depend entirely on you.", actions: ai.phase3Actions, pClass: 'p3' },
+  ];
+
+  wrap.innerHTML = phases.map((phase, i) => `
+    <div class="phase-card ${phase.pClass}" id="phase-${i}">
+      <div class="phase-stripe"></div>
+      <div class="phase-header" onclick="togglePhase(${i})">
+        <div class="phase-num">0${i + 1}</div>
+        <div class="phase-info">
+          <div class="phase-tag">Phase ${i + 1} · ${phase.months}</div>
+          <div class="phase-title">${phase.title}</div>
+          <div class="phase-sub">Goal: ${phase.goal}</div>
+        </div>
+        <div class="phase-chevron">▾</div>
+      </div>
+      <div class="phase-body">
+        <ul class="action-list">
+          ${phase.actions.map((a, j) => `
+            <li class="action-item">
+              <div class="action-n">0${j + 1}</div>
+              <div class="action-body">
+                <strong>${a.title}</strong>
+                ${a.desc}
+              </div>
+              <div class="priority-tag ${a.priority === 'now' ? 'p-now' : a.priority === 'soon' ? 'p-soon' : 'p-later'}">
+                ${a.priority === 'now' ? 'Now' : a.priority === 'soon' ? 'Soon' : 'Later'}
+              </div>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('phase-0')?.classList.add('open');
+}
 function applyTheme() {
   const r = document.documentElement;
   r.style.setProperty('--accent', config.accentColor);
