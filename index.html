@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dash OS — powered by Dandelaion</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #1a5fc8;
+    --accent-light: #3a7ae0;
+    --accent-dim: #0c3d82;
+    --accent-rgb: 26,95,200;
+    --orange: #c05c1a;
+    --orange-dim: #7a3a0f;
+    --emerald: #3a8a2a;
+    --emerald-dim: #1e5016;
+    --ruby: #a32d2d;
+    --bg-0: #f5f5f3;
+    --bg-1: #ffffff;
+    --bg-2: #f7f7f5;
+    --bg-3: #ebebea;
+    --text-1: #111111;
+    --text-2: #555555;
+    --text-3: #999999;
+    --text-4: #bbbbbb;
+    --border: #e8e8e6;
+    --border-strong: #ccccca;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-0);
+    color: var(--text-1);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ============================================================
+     SETUP WIZARD
+     ============================================================ */
+  #setup-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-0);
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #setup-overlay.hidden { display: none; }
+
+  .setup-box {
+    width: 100%;
+    max-width: 680px;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    animation: fadeUp 0.5s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .setup-header {
+    padding: 32px 36px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-1);
+  }
+
+  .setup-step-indicator {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+  .step-dot {
+    width: 28px; height: 3px;
+    background: var(--bg-3);
+    border-radius: 2px;
+    transition: background 0.3s;
+  }
+  .step-dot.active { background: var(--accent); }
+  .step-dot.done { background: var(--emerald); }
+
+  .setup-header h2 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--text-1);
+    letter-spacing: -0.02em;
+  }
+  .setup-header h2 em { color: var(--accent); font-style: italic; }
+  .setup-header p { font-size: 13px; color: var(--text-3); }
+
+  .setup-body { padding: 28px 36px; }
+  .setup-step { display: none; }
+  .setup-step.active { display: block; }
+
+  .setup-field { margin-bottom: 20px; }
+
+  .setup-label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .setup-input {
+    width: 100%;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    border-radius: 6px;
+  }
+  .setup-input:focus { border-color: var(--accent); }
+  .setup-input::placeholder { color: var(--text-4); }
+
+  .setup-input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .setup-select {
+    width: 100%;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 11px 14px;
+    outline: none;
+    cursor: pointer;
+    border-radius: 6px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+  }
+  .setup-select:focus { border-color: var(--accent); }
+  .setup-select option { background: var(--bg-1); }
+
+  .service-builder { display: flex; flex-direction: column; gap: 10px; }
+
+  .service-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px 32px;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .service-remove {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--ruby);
+    cursor: pointer;
+    font-size: 14px;
+    height: 38px;
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .service-remove:hover { background: rgba(163,45,45,0.08); border-color: var(--ruby); }
+
+  .add-service-btn {
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+    color: var(--text-4);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    padding: 10px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+    border-radius: 6px;
+  }
+  .add-service-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .color-picker-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  .color-swatch {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .color-swatch.selected { border-color: var(--text-1); transform: scale(1.15); }
+
+  .setup-footer {
+    padding: 20px 36px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .setup-powered {
+    font-size: 10px;
+    color: var(--text-4);
+    letter-spacing: 0.06em;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 11px 26px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .btn-primary:hover { background: var(--accent-light); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-3);
+    border: 1px solid var(--border);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 10px 18px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .btn-ghost:hover { color: var(--text-1); border-color: var(--border-strong); }
+
+  /* ============================================================
+     NAV
+     ============================================================ */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(255,255,255,0.97);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    overflow: hidden;
+  }
+
+  .nav-logo {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    color: var(--text-1);
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .nav-logo span { color: var(--orange); }
+
+  .nav-powered {
+    font-size: 10px;
+    color: var(--text-4);
+    letter-spacing: 0.05em;
+    border-left: 1px solid var(--border);
+    padding-left: 14px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .nav-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 2px;
+    flex: 1;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+
+  .nav-tab {
+    padding: 5px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-4);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .nav-tab:hover { color: var(--text-1); background: var(--bg-2); }
+  .nav-tab.active { color: var(--accent); background: rgba(26,95,200,0.08); }
+
+  .nav-edit-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 5px 11px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-3);
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .nav-edit-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ============================================================
+     MAIN LAYOUT
+     ============================================================ */
+  main { padding-top: 52px; }
+
+  .section { display: none; animation: fadeIn 0.4s ease; }
+  .section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============================================================
+     HERO
+     ============================================================ */
+  .hero {
+    position: relative;
+    padding: 52px 40px 40px;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-1);
+  }
+
+  .hero-tag {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--orange);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+
+  .hero h1 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: clamp(32px, 5vw, 56px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    color: var(--text-1);
+  }
+  .hero h1 em { color: var(--accent); font-style: italic; font-weight: 600; }
+
+  .hero-sub {
+    font-size: 13px;
+    color: var(--text-3);
+    margin-top: 10px;
+    max-width: 500px;
+  }
+
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 36px;
+  }
+
+  .stat-block {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 16px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-4);
+    margin-bottom: 7px;
+    font-weight: 600;
+  }
+
+  .stat-value {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .stat-note { font-size: 10px; color: var(--text-4); margin-top: 4px; }
+  .stat-block.neg .stat-value { color: var(--orange); }
+  .stat-block.pos .stat-value { color: var(--emerald); }
+
+  /* ============================================================
+     SECTION CHROME
+     ============================================================ */
+  .section-header {
+    padding: 38px 40px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-1);
+  }
+
+  .section-eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-4);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .section-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: clamp(22px, 3.5vw, 38px);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: var(--text-1);
+  }
+  .section-title em { color: var(--accent); font-style: italic; font-weight: 600; }
+
+  /* ============================================================
+     DIAGNOSIS CARDS
+     ============================================================ */
+  .diagnosis-grid {
+    padding: 28px 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .diagnosis-card {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 22px;
+    position: relative;
+    overflow: hidden;
+    border-top: 3px solid transparent;
+  }
+
+  .diagnosis-card.accent { border-top-color: var(--accent); }
+  .diagnosis-card.green { border-top-color: var(--emerald); }
+  .diagnosis-card.red { border-top-color: var(--ruby); }
+  .diagnosis-card.blue { border-top-color: var(--accent); }
+
+  .card-title {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .diagnosis-card.accent .card-title { color: var(--accent); }
+  .diagnosis-card.green .card-title { color: var(--emerald); }
+  .diagnosis-card.red .card-title { color: var(--ruby); }
+  .diagnosis-card.blue .card-title { color: var(--accent); }
+
+  .diag-table { width: 100%; border-collapse: collapse; }
+  .diag-table tr { border-bottom: 1px solid var(--bg-3); }
+  .diag-table tr:last-child { border-bottom: none; }
+  .diag-table td { padding: 7px 0; font-size: 12px; vertical-align: top; }
+  .diag-table td:first-child { color: var(--text-4); width: 45%; font-size: 11px; }
+  .diag-table td:last-child { color: var(--text-1); font-weight: 600; }
+
+  .pill {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    margin-left: 4px;
+    font-weight: 700;
+  }
+  .pill.red { background: rgba(163,45,45,0.1); color: var(--ruby); border: 1px solid rgba(163,45,45,0.2); }
+  .pill.green { background: rgba(58,138,42,0.1); color: var(--emerald); border: 1px solid rgba(58,138,42,0.2); }
+  .pill.gold { background: rgba(26,95,200,0.08); color: var(--accent); border: 1px solid rgba(26,95,200,0.2); }
+
+  .insight-bar {
+    margin: 0 40px 24px;
+    padding: 20px 24px;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--orange);
+    border-radius: 0 8px 8px 0;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-style: italic;
+    line-height: 1.65;
+    color: var(--text-2);
+  }
+  .insight-bar strong { color: var(--accent); font-style: normal; font-weight: 700; }
+
+  /* ============================================================
+     PRICING TABLE
+     ============================================================ */
+  .pricing-wrap { margin: 0 40px 28px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--bg-1); }
+
+  .pricing-bar {
+    padding: 12px 20px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .pricing-table { width: 100%; border-collapse: collapse; }
+  .pricing-table th {
+    padding: 10px 18px;
+    text-align: left;
+    font-size: 9px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--text-4);
+    background: var(--bg-2);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+  }
+  .pricing-table td {
+    padding: 12px 18px;
+    font-size: 12px;
+    border-bottom: 1px solid var(--bg-3);
+    vertical-align: middle;
+  }
+  .pricing-table tr:last-child td { border-bottom: none; }
+
+  .price-old { color: var(--ruby); text-decoration: line-through; opacity: 0.7; margin-right: 6px; }
+  .price-new { color: var(--emerald); font-weight: 600; font-size: 14px; }
+  .price-badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 6px;
+    background: rgba(58,138,42,0.1);
+    color: var(--emerald);
+    border-radius: 3px;
+    margin-left: 6px;
+    font-weight: 700;
+  }
+
+  .pricing-note {
+    padding: 12px 20px;
+    background: rgba(58,138,42,0.04);
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-3);
+  }
+
+  /* ============================================================
+     PHASE CARDS
+     ============================================================ */
+  .phases-wrap { padding: 28px 40px; display: flex; flex-direction: column; gap: 14px; }
+
+  .phase-card { background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+
+  .phase-stripe { height: 3px; }
+  .phase-card.p1 .phase-stripe { background: var(--ruby); }
+  .phase-card.p2 .phase-stripe { background: var(--orange); }
+  .phase-card.p3 .phase-stripe { background: var(--emerald); }
+
+  .phase-header {
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .phase-header:hover { background: var(--bg-2); }
+
+  .phase-num {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1;
+    opacity: 0.12;
+    min-width: 44px;
+    letter-spacing: -0.03em;
+  }
+  .phase-card.p1 .phase-num { color: var(--ruby); }
+  .phase-card.p2 .phase-num { color: var(--orange); }
+  .phase-card.p3 .phase-num { color: var(--emerald); }
+
+  .phase-info { flex: 1; }
+  .phase-tag { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 2px; font-weight: 600; }
+  .phase-card.p1 .phase-tag { color: var(--ruby); }
+  .phase-card.p2 .phase-tag { color: var(--orange); }
+  .phase-card.p3 .phase-tag { color: var(--emerald); }
+
+  .phase-title { font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; color: var(--text-1); }
+  .phase-sub { font-size: 11px; color: var(--text-4); margin-top: 2px; }
+
+  .phase-chevron { font-size: 14px; color: var(--text-4); transition: transform 0.3s; }
+  .phase-card.open .phase-chevron { transform: rotate(180deg); }
+
+  .phase-body {
+    display: none;
+    padding: 0 22px 22px;
+    border-top: 1px solid var(--border);
+  }
+  .phase-card.open .phase-body { display: block; }
+
+  .action-list { list-style: none; margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+
+  .action-item {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    gap: 10px;
+    align-items: start;
+    padding: 12px;
+    background: var(--bg-2);
+    border: 1px solid var(--bg-3);
+    border-radius: 6px;
+    transition: border-color 0.2s;
+  }
+  .action-item:hover { border-color: var(--border-strong); }
+
+  .action-n { font-size: 10px; color: var(--text-4); padding-top: 1px; }
+  .action-body { font-size: 12px; color: var(--text-1); line-height: 1.5; }
+  .action-body strong { display: block; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+  .action-body small { color: var(--text-4); font-size: 11px; }
+
+  .priority-tag {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+    margin-top: 2px;
+    font-weight: 700;
+  }
+  .p-now { background: rgba(163,45,45,0.1); color: var(--ruby); border: 1px solid rgba(163,45,45,0.15); }
+  .p-soon { background: rgba(26,95,200,0.08); color: var(--accent); border: 1px solid rgba(26,95,200,0.15); }
+  .p-later { background: rgba(58,138,42,0.08); color: var(--emerald); border: 1px solid rgba(58,138,42,0.15); }
+
+  /* ============================================================
+     ROADMAP
+     ============================================================ */
+  .roadmap-wrap { padding: 28px 40px; }
+
+  .roadmap-legend { display: flex; gap: 18px; margin-bottom: 24px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: 10px; color: var(--text-4); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+  .ldot { width: 8px; height: 8px; border-radius: 50%; }
+  .ldot.done { background: var(--emerald); }
+  .ldot.active { background: var(--accent); box-shadow: 0 0 6px rgba(26,95,200,0.4); }
+  .ldot.pending { background: transparent; border: 1px solid var(--text-4); }
+  .ldot.blocked { background: var(--ruby); opacity: 0.6; }
+
+  .roadmap-phase { margin-bottom: 30px; }
+
+  .rp-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+
+  .rp-badge {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 11px;
+    border-radius: 4px;
+  }
+  .rp-badge.p1 { background: rgba(163,45,45,0.1); color: var(--ruby); border: 1px solid rgba(163,45,45,0.2); }
+  .rp-badge.p2 { background: rgba(192,92,26,0.1); color: var(--orange); border: 1px solid rgba(192,92,26,0.2); }
+  .rp-badge.p3 { background: rgba(58,138,42,0.08); color: var(--emerald); border: 1px solid rgba(58,138,42,0.18); }
+
+  .rp-months { font-size: 10px; color: var(--text-4); }
+  .rp-line { flex: 1; height: 1px; background: var(--border); }
+
+  .ms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+
+  .ms-card {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .ms-card:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+  .ms-card.status-done { border-color: rgba(58,138,42,0.3); background: rgba(58,138,42,0.03); }
+  .ms-card.status-active { border-color: rgba(26,95,200,0.35); background: rgba(26,95,200,0.03); }
+  .ms-card.status-blocked { border-color: rgba(163,45,45,0.2); opacity: 0.72; }
+
+  .ms-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+
+  .ms-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .status-done .ms-dot { background: var(--emerald); }
+  .status-active .ms-dot { background: var(--accent); animation: pulse 2s infinite; }
+  .status-pending .ms-dot { background: transparent; border: 1px solid var(--text-4); }
+  .status-blocked .ms-dot { background: var(--ruby); }
+
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+  .ms-status-lbl { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+  .status-done .ms-status-lbl { color: var(--emerald); }
+  .status-active .ms-status-lbl { color: var(--accent); }
+  .status-pending .ms-status-lbl { color: var(--text-4); }
+  .status-blocked .ms-status-lbl { color: var(--ruby); }
+
+  .ms-title { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; margin-bottom: 3px; line-height: 1.3; color: var(--text-1); }
+  .ms-desc { font-size: 11px; color: var(--text-4); line-height: 1.5; }
+
+  .ms-actions { display: flex; gap: 5px; margin-top: 10px; flex-wrap: wrap; }
+
+  .ms-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-4);
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s;
+    font-weight: 600;
+  }
+  .ms-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .ms-btn.b-done:hover { border-color: var(--emerald); color: var(--emerald); }
+  .ms-btn.b-blocked:hover { border-color: var(--ruby); color: var(--ruby); }
+
+  /* ============================================================
+     INCOME CALCULATOR
+     ============================================================ */
+  .calc-wrap { margin: 0 40px 28px; }
+
+  .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .calc-panel { background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+
+  .calc-panel h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .calc-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--bg-3);
+    gap: 10px;
+  }
+  .calc-row:last-of-type { border-bottom: none; }
+  .calc-lbl { font-size: 11px; color: var(--text-4); flex: 1; }
+
+  .calc-input {
+    width: 72px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    padding: 5px 8px;
+    text-align: right;
+    outline: none;
+    transition: border-color 0.2s;
+    border-radius: 5px;
+    font-weight: 600;
+  }
+  .calc-input:focus { border-color: var(--accent); }
+
+  .calc-result {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 18px;
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .calc-result-lbl { font-size: 10px; color: var(--text-4); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+  .calc-result-val { font-family: 'DM Sans', sans-serif; font-size: 26px; font-weight: 700; color: var(--emerald); letter-spacing: -0.02em; }
+  .calc-result-val.neg { color: var(--ruby); }
+  .calc-result-val.mid { color: var(--orange); }
+
+  .calc-uplift {
+    margin-top: 12px;
+    padding: 16px 20px;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .calc-uplift-lbl { font-size: 11px; color: var(--text-4); letter-spacing: 0.04em; text-transform: uppercase; font-weight: 500; }
+  .calc-uplift-val { font-family: 'DM Sans', sans-serif; font-size: 24px; font-weight: 700; color: var(--accent); letter-spacing: -0.02em; }
+
+  .calc-service-header {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-4);
+    padding: 5px 0 2px;
+    border-bottom: 1px solid var(--bg-3);
+    margin-bottom: 2px;
+    font-weight: 600;
+  }
+
+  /* ============================================================
+     VISION
+     ============================================================ */
+  .vision-grid { padding: 28px 40px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+  .vision-card {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 22px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .vision-card:hover { border-color: var(--border-strong); }
+
+  .vision-num {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 10px;
+    color: var(--accent);
+    letter-spacing: -0.03em;
+    opacity: 0.3;
+  }
+
+  .vision-title { font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 6px; color: var(--text-1); }
+  .vision-desc { font-size: 11px; color: var(--text-4); line-height: 1.6; }
+
+  /* ============================================================
+     NOTES
+     ============================================================ */
+  .notes-wrap { margin: 0 40px 40px; }
+  .notes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .note-card {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .note-head {
+    padding: 11px 16px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .note-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  textarea.note-ta {
+    width: 100%;
+    min-height: 160px;
+    background: transparent;
+    border: none;
+    padding: 14px 16px;
+    color: var(--text-1);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    line-height: 1.75;
+    resize: vertical;
+    outline: none;
+    flex: 1;
+  }
+  textarea.note-ta::placeholder { color: var(--text-4); font-style: italic; }
+
+  .notes-save-row { margin-top: 12px; display: flex; gap: 10px; align-items: center; }
+  .save-confirm { font-size: 11px; color: var(--emerald); display: none; letter-spacing: 0.06em; font-weight: 600; }
+
+  /* ============================================================
+     FOOTER
+     ============================================================ */
+  .page-footer {
+    margin-top: 40px;
+    padding: 20px 40px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-brand {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-4);
+  }
+  .footer-brand span { color: var(--orange); }
+  .footer-powered {
+    font-size: 10px;
+    color: var(--text-4);
+    letter-spacing: 0.05em;
+  }
+  .footer-note { font-size: 10px; color: var(--text-4); font-style: italic; }
+
+  /* ============================================================
+     SCROLLBAR
+     ============================================================ */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg-0); }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+  /* ============================================================
+     RESPONSIVE
+     ============================================================ */
+  @media (max-width: 820px) {
+    nav { padding: 0 14px; gap: 10px; }
+    .nav-tab { padding: 5px 8px; font-size: 10px; }
+    .nav-logo { font-size: 12px; }
+    .nav-powered { display: none; }
+    .hero { padding: 28px 18px 28px; }
+    .hero-stats { grid-template-columns: 1fr 1fr; }
+    .section-header { padding: 22px 18px 16px; }
+    .diagnosis-grid { grid-template-columns: 1fr; padding: 18px; }
+    .phases-wrap { padding: 18px; }
+    .roadmap-wrap { padding: 18px; }
+    .calc-wrap { margin: 0 18px 24px; }
+    .calc-grid { grid-template-columns: 1fr; }
+    .notes-wrap { margin: 0 18px 24px; }
+    .notes-grid { grid-template-columns: 1fr; }
+    .vision-grid { grid-template-columns: 1fr; padding: 18px; }
+    .insight-bar { margin: 0 18px 18px; }
+    .pricing-wrap { margin: 0 18px 18px; }
+    .ms-grid { grid-template-columns: 1fr; }
+    .page-footer { padding: 16px 18px; flex-direction: column; gap: 4px; text-align: center; }
+    .setup-box { border: none; border-radius: 0; }
+    .setup-header, .setup-body, .setup-footer { padding-left: 20px; padding-right: 20px; }
+    .setup-input-row { grid-template-columns: 1fr; }
+    .service-row { grid-template-columns: 1fr 70px 70px 32px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     SETUP WIZARD
+     ============================================================ -->
+<div id="setup-overlay">
+  <div class="setup-box">
+    <div class="setup-header">
+      <div class="setup-step-indicator">
+        <div class="step-dot active" id="sdot-0"></div>
+        <div class="step-dot" id="sdot-1"></div>
+        <div class="step-dot" id="sdot-2"></div>
+        <div class="step-dot" id="sdot-3"></div>
+        <div class="step-dot" id="sdot-4"></div>
+      </div>
+      <h2 id="setup-title">Welcome to <em>Dash OS</em></h2>
+      <p id="setup-desc">Let's build your personalised business roadmap. Takes about 3 minutes.</p>
+    </div>
+
+    <div class="setup-body">
+
+      <!-- STEP 0 -->
+      <div class="setup-step active" id="step-0">
+        <div class="setup-field">
+          <label class="setup-label">Business / Brand Name</label>
+          <input class="setup-input" id="s_brand" type="text" placeholder="e.g. Studio Nova, Apex Co, TechLaunch…">
+        </div>
+        <div class="setup-field">
+          <label class="setup-label">Your Name</label>
+          <input class="setup-input" id="s_name" type="text" placeholder="First name or full name">
+        </div>
+        <div class="setup-field">
+          <label class="setup-label">Business Type</label>
+          <select class="setup-select" id="s_type">
+            <option value="">— Select —</option>
+            <option value="service">Service Business (freelance, agency, trades)</option>
+            <option value="hospitality">Hospitality / Wellness / Beauty</option>
+            <option value="retail">Retail / E-commerce</option>
+            <option value="saas">SaaS / Tech Product</option>
+            <option value="creative">Creative / Studio / Content</option>
+            <option value="food">Food & Beverage</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="setup-field">
+          <label class="setup-label">Currency Symbol</label>
+          <select class="setup-select" id="s_currency">
+            <option value="£">£ — British Pound</option>
+            <option value="$">$ — US / CA / AU Dollar</option>
+            <option value="€">€ — Euro</option>
+            <option value="R">R — South African Rand</option>
+            <option value="₦">₦ — Nigerian Naira</option>
+            <option value="other">Other (type below)</option>
+          </select>
+        </div>
+        <div class="setup-field" id="currency-custom-field" style="display:none;">
+          <label class="setup-label">Custom Currency Symbol</label>
+          <input class="setup-input" id="s_currency_custom" type="text" placeholder="e.g. kr, ¥, ₹" maxlength="3">
+        </div>
+      </div>
+
+      <!-- STEP 1 -->
+      <div class="setup-step" id="step-1">
+        <div class="setup-field">
+          <label class="setup-label">Current Monthly Revenue</label>
+          <input class="setup-input" id="s_rev_now" type="number" placeholder="e.g. 1200">
+        </div>
+        <div class="setup-field">
+          <label class="setup-label">Main Fixed Cost / Month</label>
+          <input class="setup-input" id="s_cost_now" type="number" placeholder="e.g. 800">
+        </div>
+        <div class="setup-input-row">
+          <div class="setup-field">
+            <label class="setup-label">Revenue Target (low)</label>
+            <input class="setup-input" id="s_target_low" type="number" placeholder="e.g. 3000">
+          </div>
+          <div class="setup-field">
+            <label class="setup-label">Revenue Target (high)</label>
+            <input class="setup-input" id="s_target_high" type="number" placeholder="e.g. 6000">
+          </div>
+        </div>
+        <div class="setup-field">
+          <label class="setup-label">Number of Active Clients / Customers</label>
+          <input class="setup-input" id="s_clients" type="number" placeholder="e.g. 12">
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="setup-step" id="step-2">
+        <div class="setup-field">
+          <label class="setup-label">Your Services or Products <span style="color:var(--text-4);font-size:10px;">(add up to 4)</span></label>
+          <div class="service-builder" id="service-builder">
+            <div style="display:grid;grid-template-columns:1fr 80px 80px 32px;gap:8px;margin-bottom:4px;">
+              <span style="font-size:9px;color:var(--text-4);letter-spacing:0.1em;text-transform:uppercase;padding-left:2px;">Name</span>
+              <span style="font-size:9px;color:var(--text-4);letter-spacing:0.1em;text-transform:uppercase;">Current</span>
+              <span style="font-size:9px;color:var(--text-4);letter-spacing:0.1em;text-transform:uppercase;">Target</span>
+              <span></span>
+            </div>
+          </div>
+          <button class="add-service-btn" id="add-service-btn" onclick="addServiceRow()">+ Add Service / Product</button>
+        </div>
+        <div class="setup-field">
+          <label class="setup-label">Your ideal customer / client</label>
+          <input class="setup-input" id="s_ideal_client" type="text" placeholder="e.g. Busy professionals 30–50 who want premium results">
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="setup-step" id="step-3">
+        <div class="setup-field">
+          <label class="setup-label">Your biggest current problem</label>
+          <select class="setup-select" id="s_problem">
+            <option value="not_enough_clients">Not enough clients / customers</option>
+            <option value="underpriced">Underpriced — clients but not enough income</option>
+            <option value="brand_visibility">Brand / visibility — people don't know I exist</option>
+            <option value="retention">Retention — clients come once and don't return</option>
+            <option value="costs">Costs too high — revenue but poor margins</option>
+            <option value="scaling">Can't scale — stuck at current capacity</option>
+          </select>
+        </div>
+        <div class="setup-field">
+          <label class="setup-label">Your biggest asset / strength</label>
+          <input class="setup-input" id="s_strength" type="text" placeholder="e.g. 5 years expertise, loyal repeat clients, strong Instagram…">
+        </div>
+        <div class="setup-field">
+          <label class="setup-label">Your long-term vision</label>
+          <input class="setup-input" id="s_vision" type="text" placeholder="e.g. A premium studio with a product line and team of 3…">
+        </div>
+      </div>
+
+      <!-- STEP 4 -->
+      <div class="setup-step" id="step-4">
+        <div class="setup-field">
+          <label class="setup-label">Choose your accent colour</label>
+          <div class="color-picker-row" id="color-picker">
+            <div class="color-swatch selected" data-color="#1a5fc8" data-rgb="26,95,200" style="background:#1a5fc8;" onclick="selectColor(this)"></div>
+            <div class="color-swatch" data-color="#3a8a2a" data-rgb="58,138,42" style="background:#3a8a2a;" onclick="selectColor(this)"></div>
+            <div class="color-swatch" data-color="#c05c1a" data-rgb="192,92,26" style="background:#c05c1a;" onclick="selectColor(this)"></div>
+            <div class="color-swatch" data-color="#7c3abf" data-rgb="124,58,191" style="background:#7c3abf;" onclick="selectColor(this)"></div>
+            <div class="color-swatch" data-color="#b02060" data-rgb="176,32,96" style="background:#b02060;" onclick="selectColor(this)"></div>
+            <div class="color-swatch" data-color="#1a9e8a" data-rgb="26,158,138" style="background:#1a9e8a;" onclick="selectColor(this)"></div>
+            <div class="color-swatch" data-color="#111111" data-rgb="17,17,17" style="background:#111111;" onclick="selectColor(this)"></div>
+          </div>
+        </div>
+        <div class="setup-field" style="margin-top:8px;">
+          <label class="setup-label">Tagline / Strapline (optional)</label>
+          <input class="setup-input" id="s_tagline" type="text" placeholder="e.g. Premium results, not promises.">
+        </div>
+        <div style="margin-top:16px;padding:14px 16px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text-3);line-height:1.6;">
+          Your personalised Dash OS dashboard will be built from your inputs. You can edit any numbers at any time.
+        </div>
+      </div>
+
+    </div>
+
+    <div class="setup-footer">
+      <button class="btn-ghost" id="setup-back-btn" onclick="setupBack()" style="display:none;">← Back</button>
+      <div class="setup-powered">powered by Dandelaion</div>
+      <button class="btn-primary" id="setup-next-btn" onclick="setupNext()">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MAIN APP
+     ============================================================ -->
+<nav>
+  <div class="nav-logo" id="nav-brand">DASH<span>OS</span></div>
+  <div class="nav-powered" id="nav-powered">powered by Dandelaion</div>
+  <div class="nav-divider"></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('diagnosis', this)">Audit</button>
+    <button class="nav-tab" onclick="showTab('plan', this)">Plan</button>
+    <button class="nav-tab" onclick="showTab('roadmap', this)">Roadmap</button>
+    <button class="nav-tab" onclick="showTab('income', this)">Income</button>
+    <button class="nav-tab" onclick="showTab('vision', this)">Vision</button>
+    <button class="nav-tab" onclick="showTab('notes', this)">Journal</button>
+  </div>
+  <button class="nav-edit-btn" onclick="openSetup()">✎ Edit</button>
+</nav>
+
+<main>
+
+  <!-- DIAGNOSIS -->
+  <div id="diagnosis" class="section active">
+    <div class="hero">
+      <div class="hero-tag" id="hero-tag">Dash OS — Business Audit</div>
+      <h1>The <em>Real</em> Audit</h1>
+      <p class="hero-sub" id="hero-sub">Where you are. Where you're going. What it takes to close the gap.</p>
+      <div class="hero-stats">
+        <div class="stat-block neg">
+          <div class="stat-label">Monthly Revenue (Now)</div>
+          <div class="stat-value" id="stat-rev">—</div>
+          <div class="stat-note" id="stat-rev-note">Current baseline</div>
+        </div>
+        <div class="stat-block neg">
+          <div class="stat-label">Main Monthly Cost</div>
+          <div class="stat-value" id="stat-cost">—</div>
+          <div class="stat-note" id="stat-cost-note">Fixed overhead</div>
+        </div>
+        <div class="stat-block pos">
+          <div class="stat-label">Revenue Target</div>
+          <div class="stat-value" id="stat-target">—</div>
+          <div class="stat-note">Monthly goal range</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-label">Gap to Close</div>
+          <div class="stat-value" id="stat-gap">—</div>
+          <div class="stat-note">To hit floor target</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-eyebrow">Core Analysis</div>
+      <div class="section-title">What the numbers <em>reveal</em></div>
+    </div>
+
+    <div class="diagnosis-grid">
+      <div class="diagnosis-card red">
+        <div class="card-title">⚠ The Problem</div>
+        <table class="diag-table" id="diag-problem"></table>
+      </div>
+      <div class="diagnosis-card green">
+        <div class="card-title">✦ The Assets</div>
+        <table class="diag-table" id="diag-assets"></table>
+      </div>
+      <div class="diagnosis-card accent">
+        <div class="card-title">◈ The Positioning Gap</div>
+        <table class="diag-table" id="diag-gap"></table>
+      </div>
+      <div class="diagnosis-card blue">
+        <div class="card-title">◉ The Opportunity</div>
+        <table class="diag-table" id="diag-opportunity"></table>
+      </div>
+    </div>
+
+    <div class="insight-bar" id="insight-bar">Building your diagnosis…</div>
+  </div>
+
+  <!-- PLAN -->
+  <div id="plan" class="section">
+    <div class="section-header">
+      <div class="section-eyebrow">Strategic Framework</div>
+      <div class="section-title">The <em>Growth Plan</em></div>
+    </div>
+    <div class="pricing-wrap" id="pricing-wrap">
+      <div class="pricing-bar">⬆ Recommended Pricing Corrections</div>
+      <table class="pricing-table">
+        <thead>
+          <tr>
+            <th>Service / Product</th>
+            <th>Current Price</th>
+            <th>Recommended</th>
+            <th>Why</th>
+          </tr>
+        </thead>
+        <tbody id="pricing-tbody"></tbody>
+      </table>
+      <div class="pricing-note" id="pricing-note">Enter your services to see pricing recommendations.</div>
+    </div>
+    <div class="phases-wrap" id="phases-wrap"></div>
+  </div>
+
+  <!-- ROADMAP -->
+  <div id="roadmap" class="section">
+    <div class="section-header">
+      <div class="section-eyebrow">Live Tracker</div>
+      <div class="section-title">Your <em>Roadmap</em></div>
+    </div>
+    <div class="roadmap-wrap">
+      <div class="roadmap-legend">
+        <div class="legend-item"><div class="ldot done"></div> Done</div>
+        <div class="legend-item"><div class="ldot active"></div> In Progress</div>
+        <div class="legend-item"><div class="ldot pending"></div> Pending</div>
+        <div class="legend-item"><div class="ldot blocked"></div> Blocked</div>
+      </div>
+      <div id="roadmap-track"></div>
+    </div>
+  </div>
+
+  <!-- INCOME -->
+  <div id="income" class="section">
+    <div class="section-header">
+      <div class="section-eyebrow">Financial Modelling</div>
+      <div class="section-title">Income <em>Calculator</em></div>
+    </div>
+    <div class="calc-wrap">
+      <div class="calc-grid" id="calc-grid"></div>
+      <div class="calc-uplift">
+        <div class="calc-uplift-lbl">Monthly uplift if you hit the target model</div>
+        <div class="calc-uplift-val" id="uplift-val">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISION -->
+  <div id="vision" class="section">
+    <div class="section-header">
+      <div class="section-eyebrow">The Long Game</div>
+      <div class="section-title">Your <em>Vision</em></div>
+    </div>
+    <div class="vision-grid" id="vision-grid"></div>
+    <div class="insight-bar" id="vision-quote" style="margin:0 40px 40px;">
+      "The goal isn't just more revenue — it's building a business that runs <strong>on your terms.</strong>"
+    </div>
+  </div>
+
+  <!-- NOTES -->
+  <div id="notes" class="section">
+    <div class="section-header">
+      <div class="section-eyebrow">Personal Log</div>
+      <div class="section-title">Your <em>Notes</em></div>
+    </div>
+    <div class="notes-wrap">
+      <div class="notes-grid">
+        <div class="note-card">
+          <div class="note-head"><div class="note-dot" style="background:var(--accent)"></div>Weekly Wins</div>
+          <textarea class="note-ta" id="note-wins" placeholder="Record your wins this week…"></textarea>
+        </div>
+        <div class="note-card">
+          <div class="note-head"><div class="note-dot" style="background:var(--ruby)"></div>Blockers &amp; Challenges</div>
+          <textarea class="note-ta" id="note-blocks" placeholder="What's in the way right now?"></textarea>
+        </div>
+        <div class="note-card">
+          <div class="note-head"><div class="note-dot" style="background:var(--emerald)"></div>Ideas &amp; Experiments</div>
+          <textarea class="note-ta" id="note-ideas" placeholder="New ideas, things to test…"></textarea>
+        </div>
+        <div class="note-card">
+          <div class="note-head"><div class="note-dot" style="background:var(--orange)"></div>Client Insights</div>
+          <textarea class="note-ta" id="note-clients" placeholder="Patterns you're noticing, what clients are saying…"></textarea>
+        </div>
+      </div>
+      <div class="notes-save-row">
+        <button class="btn-ghost" onclick="saveNotes()">Save Notes</button>
+        <span class="save-confirm" id="save-confirm">✓ Saved</span>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div class="page-footer">
+  <div class="footer-brand">DASH<span>OS</span></div>
+  <div class="footer-note" id="footer-note">Your personalised business roadmap</div>
+  <div class="footer-powered">powered by Dandelaion</div>
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT — unchanged logic from original
+     ============================================================ -->
+<script>
+let config = {
+  brand: '', name: '', type: '', currency: '£',
+  revNow: 0, costNow: 0, targetLow: 0, targetHigh: 0, clients: 0,
+  services: [], idealClient: '', problem: '', strength: '', vision: '',
+  tagline: '', accentColor: '#1a5fc8', accentRgb: '26,95,200',
+};
+
+let milestoneStates = {};
+let setupStep = 0;
+const TOTAL_STEPS = 5;
+
+const stepTitles = [
+  ['Welcome to <em>Dash OS</em>', 'Let\'s build your personalised business roadmap. Takes about 3 minutes.'],
+  ['Your <em>Current Numbers</em>', 'Honest numbers only — this is your private dashboard.'],
+  ['Your <em>Services & Products</em>', 'What do you sell? We\'ll build your pricing table from this.'],
+  ['Your <em>Positioning</em>', 'Understanding where you are helps us map where to go.'],
+  ['<em>Personalise</em> Your Dashboard', 'Make it yours before we launch.'],
+];
+
+function setupNext() {
+  if (!validateStep(setupStep)) return;
+  if (setupStep < TOTAL_STEPS - 1) {
+    document.getElementById(`step-${setupStep}`).classList.remove('active');
+    setupStep++;
+    document.getElementById(`step-${setupStep}`).classList.add('active');
+    updateSetupUI();
+  } else {
+    buildDashboard();
+    document.getElementById('setup-overlay').classList.add('hidden');
+  }
+}
+
+function setupBack() {
+  if (setupStep > 0) {
+    document.getElementById(`step-${setupStep}`).classList.remove('active');
+    setupStep--;
+    document.getElementById(`step-${setupStep}`).classList.add('active');
+    updateSetupUI();
+  }
+}
+
+function updateSetupUI() {
+  const [title, desc] = stepTitles[setupStep];
+  document.getElementById('setup-title').innerHTML = title;
+  document.getElementById('setup-desc').textContent = desc;
+  document.getElementById('setup-back-btn').style.display = setupStep > 0 ? 'block' : 'none';
+  document.getElementById('setup-next-btn').textContent = setupStep === TOTAL_STEPS - 1 ? 'Build My Dashboard →' : 'Continue →';
+  for (let i = 0; i < TOTAL_STEPS; i++) {
+    const dot = document.getElementById(`sdot-${i}`);
+    dot.className = 'step-dot ' + (i < setupStep ? 'done' : i === setupStep ? 'active' : '');
+  }
+}
+
+function validateStep(step) {
+  if (step === 0) {
+    const brand = document.getElementById('s_brand').value.trim();
+    if (!brand) { flashInput('s_brand'); return false; }
+  }
+  return true;
+}
+
+function flashInput(id) {
+  const el = document.getElementById(id);
+  el.style.borderColor = 'var(--ruby)';
+  el.focus();
+  setTimeout(() => el.style.borderColor = '', 1200);
+}
+
+function openSetup() { document.getElementById('setup-overlay').classList.remove('hidden'); }
+
+document.getElementById('s_currency').addEventListener('change', function() {
+  document.getElementById('currency-custom-field').style.display = this.value === 'other' ? 'block' : 'none';
+});
+
+let serviceCount = 0;
+
+function addServiceRow() {
+  if (serviceCount >= 4) return;
+  serviceCount++;
+  const builder = document.getElementById('service-builder');
+  const row = document.createElement('div');
+  row.className = 'service-row';
+  row.id = `svc-row-${serviceCount}`;
+  row.innerHTML = `
+    <input class="setup-input" type="text" placeholder="Service name" id="svc-name-${serviceCount}">
+    <input class="setup-input" type="number" placeholder="Now" id="svc-cur-${serviceCount}" style="text-align:right;">
+    <input class="setup-input" type="number" placeholder="Target" id="svc-tar-${serviceCount}" style="text-align:right;">
+    <button class="service-remove" onclick="removeServiceRow(${serviceCount})">×</button>
+  `;
+  builder.appendChild(row);
+  if (serviceCount >= 4) document.getElementById('add-service-btn').style.display = 'none';
+}
+
+function removeServiceRow(n) {
+  const row = document.getElementById(`svc-row-${n}`);
+  if (row) row.remove();
+  serviceCount = Math.max(0, serviceCount - 1);
+  document.getElementById('add-service-btn').style.display = '';
+}
+
+function selectColor(el) {
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+addServiceRow();
+
+function buildDashboard() {
+  const cur = document.getElementById('s_currency').value;
+  config.currency = cur === 'other' ? (document.getElementById('s_currency_custom').value || '£') : cur;
+  config.brand = document.getElementById('s_brand').value.trim() || 'Dash OS';
+  config.name = document.getElementById('s_name').value.trim();
+  config.type = document.getElementById('s_type').value;
+  config.revNow = parseFloat(document.getElementById('s_rev_now').value) || 0;
+  config.costNow = parseFloat(document.getElementById('s_cost_now').value) || 0;
+  config.targetLow = parseFloat(document.getElementById('s_target_low').value) || 0;
+  config.targetHigh = parseFloat(document.getElementById('s_target_high').value) || 0;
+  config.clients = parseInt(document.getElementById('s_clients').value) || 0;
+  config.idealClient = document.getElementById('s_ideal_client').value.trim();
+  config.problem = document.getElementById('s_problem').value;
+  config.strength = document.getElementById('s_strength').value.trim();
+  config.vision = document.getElementById('s_vision').value.trim();
+  config.tagline = document.getElementById('s_tagline').value.trim();
+  config.services = [];
+  for (let i = 1; i <= 10; i++) {
+    const n = document.getElementById(`svc-name-${i}`);
+    if (!n) continue;
+    const name = n.value.trim();
+    if (!name) continue;
+    const cur2 = parseFloat(document.getElementById(`svc-cur-${i}`)?.value) || 0;
+    const tar = parseFloat(document.getElementById(`svc-tar-${i}`)?.value) || 0;
+    config.services.push({ name, currentPrice: cur2, targetPrice: tar });
+  }
+  const selected = document.querySelector('.color-swatch.selected');
+  if (selected) { config.accentColor = selected.dataset.color; config.accentRgb = selected.dataset.rgb; }
+  applyTheme();
+  populateDiagnosis();
+  populatePlan();
+  populateRoadmap();
+  populateCalc();
+  populateVision();
+  loadNotes();
+  saveConfig();
+}
+
+function applyTheme() {
+  const r = document.documentElement;
+  r.style.setProperty('--accent', config.accentColor);
+  r.style.setProperty('--accent-rgb', config.accentRgb);
+  document.getElementById('hero-tag').textContent = `Dash OS — Business Audit${config.name ? ' · ' + config.name : ''}`;
+  document.getElementById('footer-note').textContent = config.tagline || 'Your personalised business roadmap';
+  document.title = `Dash OS — ${config.brand}`;
+}
+
+function fmt(n) { return config.currency + Math.round(n).toLocaleString(); }
+
+function populateDiagnosis() {
+  const c = config;
+  const gap = Math.max(0, c.targetLow - c.revNow);
+  const net = c.revNow - c.costNow;
+  document.getElementById('stat-rev').textContent = c.revNow ? fmt(c.revNow) : '—';
+  document.getElementById('stat-cost').textContent = c.costNow ? fmt(c.costNow) : '—';
+  document.getElementById('stat-target').textContent = c.targetLow ? `${fmt(c.targetLow)}–${fmt(c.targetHigh)}` : '—';
+  document.getElementById('stat-gap').textContent = gap ? fmt(gap) : '—';
+  document.getElementById('stat-rev-note').textContent = net < 0 ? `Net: ${fmt(net)} — operating at a loss` : `Net: ${fmt(net)} after main cost`;
+
+  const problemMap = {
+    not_enough_clients: [['Lead volume','Too low','red'],['Monthly clients',`${c.clients||'?'} active`,'red'],['Primary fix','Acquisition first'],['Secondary fix','Retention & referrals'],['Pricing position',c.services.length?'Review alongside volume':'Not yet assessed']],
+    underpriced: [['Client volume',`${c.clients||'?'} active`,'green'],['Revenue per client',c.clients&&c.revNow?fmt(c.revNow/c.clients)+'/client avg':'—','red'],['Root cause','Pricing below value','red'],['Primary fix','Raise prices now'],['Risk','Some churn expected — normal']],
+    brand_visibility: [['Awareness','Low — underexposed','red'],['Conversion','Likely strong'],['Bottleneck','Top of funnel','red'],['Fix','Content + paid + referrals'],['Timeline','60–90 days to see signal']],
+    retention: [['Volume OK','Yes — leads coming in'],['Retention rate','Low — single visits','red'],['LTV potential','Untapped','red'],['Fix 1','Follow-up system'],['Fix 2','Membership / retainer model']],
+    costs: [['Revenue',c.revNow?fmt(c.revNow):'—'],['Fixed costs',c.costNow?fmt(c.costNow):'—','red'],['Net margin',c.revNow?Math.round(((c.revNow-c.costNow)/c.revNow)*100)+'%':'—',net<0?'red':''],['Fix','Renegotiate or cut costs'],['Alt','Increase revenue per hour']],
+    scaling: [['At capacity','Yes — time-limited','red'],['Revenue ceiling',c.revNow?fmt(c.revNow)+'/mo':'—'],['Fix','Systems, team, productise'],['Leverage','Products / digital / team'],['Timeline','3–6 months to shift model']],
+  };
+  const assetRows = [['Active clients',`${c.clients||'?'} — ${c.clients>15?'solid base':c.clients>5?'growing':'early stage'}`],['Main strength',c.strength||'To be defined'],['Ideal client',c.idealClient||'To be defined'],...(c.services.length?[['Services / products',c.services.map(s=>s.name).join(', ')]]:[] )];
+  const gapRows = [['Revenue now',c.revNow?fmt(c.revNow):'—'],['Target',c.targetLow?`${fmt(c.targetLow)} – ${fmt(c.targetHigh)}`:'—'],['Gap',gap?fmt(gap)+' to close':'—'],['Main problem',(document.getElementById('s_problem').selectedOptions[0]?.text||'—')],['Net monthly',fmt(net)]];
+  const opportunityRows = [['Ideal client',c.idealClient||'Define this first'],['White space','Review competition — find underserved need'],['Quick win',problemFix(c.problem)],['Product potential','Explore after service stabilised'],['Long-term',c.vision?c.vision.substring(0,48)+(c.vision.length>48?'…':''):'Define in Vision tab']];
+  renderDiagTable('diag-problem', (problemMap[c.problem]||gapRows));
+  renderDiagTable('diag-assets', assetRows);
+  renderDiagTable('diag-gap', gapRows);
+  renderDiagTable('diag-opportunity', opportunityRows);
+  document.getElementById('insight-bar').innerHTML = buildInsight(c);
+}
+
+function renderDiagTable(id, rows) {
+  const t = document.getElementById(id);
+  t.innerHTML = rows.map(([k,v,pill])=>`<tr><td>${k}</td><td>${v}${pill?` <span class="pill ${pill}">${pill==='red'?'⚠':'✓'}</span>`:''}</td></tr>`).join('');
+}
+
+function problemFix(p) {
+  const m = {not_enough_clients:'Lead gen + referral system',underpriced:'Raise prices this week',brand_visibility:'Content + paid ads',retention:'Follow-up + membership',costs:'Cost audit + price rise',scaling:'Systemise + leverage'};
+  return m[p]||'See The Plan tab';
+}
+
+function buildInsight(c) {
+  const name = c.name ? c.name.split(' ')[0] : 'You';
+  const problemLabels = {not_enough_clients:`<strong>underexposed</strong> — the clients aren't finding you yet`,underpriced:`<strong>underpriced</strong> — the clients are there, the income isn't`,brand_visibility:`<strong>invisible</strong> — the product is good, the signal is weak`,retention:`<strong>leaking</strong> — acquisition works, but retention doesn't yet`,costs:`<strong>margin-squeezed</strong> — revenue is one thing, what stays is another`,scaling:`<strong>capacity-capped</strong> — you've hit the ceiling of the current model`};
+  const pl = problemLabels[c.problem]||'<strong>at an inflection point</strong>';
+  return `"${name} — you're not underperforming. You're ${pl}. The plan addresses exactly that."`;
+}
+
+function populatePlan() { buildPricingTable(); buildPhases(); }
+
+function buildPricingTable() {
+  const tbody = document.getElementById('pricing-tbody');
+  const note = document.getElementById('pricing-note');
+  if (!config.services.length) { tbody.innerHTML='<tr><td colspan="4" style="padding:20px;color:var(--text-4);text-align:center;font-size:12px;">No services added — go back and add your services.</td></tr>'; return; }
+  tbody.innerHTML = config.services.map(s => {
+    if (!s.currentPrice && !s.targetPrice) return '';
+    const increase = s.currentPrice&&s.targetPrice?Math.round(((s.targetPrice-s.currentPrice)/s.currentPrice)*100):null;
+    const whys = {not_enough_clients:'Hold price — focus on volume first.',underpriced:'Below market rate. Raise with confidence.',brand_visibility:'Price signals quality to new audiences.',retention:'Price can stay — improve the experience.',costs:'Price increase improves margin directly.',scaling:'Higher price per unit needed to scale efficiently.'};
+    return `<tr><td style="color:var(--text-1);font-weight:700;">${s.name}</td><td>${s.currentPrice?`<span class="price-old">${fmt(s.currentPrice)}</span>`:'<span style="color:var(--text-4)">—</span>'}</td><td>${s.targetPrice?`<span class="price-new">${fmt(s.targetPrice)}</span>${increase!==null?`<span class="price-badge">+${increase}%</span>`:''}`:'<span style="color:var(--text-4)">—</span>'}</td><td style="color:var(--text-4);font-size:11px;">${whys[config.problem]||'Reflects your value level.'}</td></tr>`;
+  }).join('');
+  const totalCurrent = config.services.reduce((a,s)=>a+(s.currentPrice||0),0);
+  const totalTarget = config.services.reduce((a,s)=>a+(s.targetPrice||0),0);
+  note.innerHTML = `At target pricing: every client is worth <strong style="color:var(--text-1)">${fmt(totalTarget)}</strong> vs ${fmt(totalCurrent)} today — a <strong style="color:var(--emerald)">${fmt(totalTarget-totalCurrent)} uplift per client visit.</strong>`;
+}
+
+function buildPhases() {
+  const wrap = document.getElementById('phases-wrap');
+  const phases = generatePhases(config);
+  wrap.innerHTML = phases.map((phase,i) => {
+    const pClass = `p${i+1}`;
+    return `<div class="phase-card ${pClass}" id="phase-${i}"><div class="phase-stripe"></div><div class="phase-header" onclick="togglePhase(${i})"><div class="phase-num">0${i+1}</div><div class="phase-info"><div class="phase-tag">Phase ${i+1} · ${phase.months}</div><div class="phase-title">${phase.title}</div><div class="phase-sub">Goal: ${phase.goal}</div></div><div class="phase-chevron">▾</div></div><div class="phase-body"><ul class="action-list">${phase.actions.map((a,j)=>`<li class="action-item"><div class="action-n">0${j+1}</div><div class="action-body"><strong>${a.title}</strong>${a.desc}${a.sub?`<small>${a.sub}</small>`:''}</div><div class="priority-tag ${a.priority==='now'?'p-now':a.priority==='soon'?'p-soon':'p-later'}">${a.priority==='now'?'Now':a.priority==='soon'?'Soon':'Later'}</div></li>`).join('')}</ul></div></div>`;
+  }).join('');
+  document.getElementById('phase-0')?.classList.add('open');
+}
+
+function generatePhases(c) {
+  const svcList = c.services.length?c.services.map(s=>s.name).join(', '):'your services';
+  const cur = c.currency;
+  const problemActions = {
+    not_enough_clients:[{title:'Build your referral engine',desc:'Ask every happy client for one referral. Create a simple incentive — a discount, free add-on, or recognition. Most service businesses underutilise their existing base.',sub:'Target: 2 referrals per week minimum.',priority:'now'},{title:'Audit and fix your online presence',desc:'Google Business Profile fully complete and active. Instagram / LinkedIn consistent. One clear call to action visible everywhere: how to book you.',priority:'now'},{title:'Add a lead magnet or first-session offer',desc:'Lower the barrier for new clients. A compelling first experience. Not discounting your value — demonstrating it.',priority:'soon'}],
+    underpriced:[{title:'Raise your prices — this week',desc:`Your current pricing is below what you deliver. Increase to target prices and frame it as a brand evolution, not an apology. Start with new clients first.`,priority:'now'},{title:'Add a premium tier service',desc:`Create a top-tier offering: ${svcList} extended version. More time, more depth, more transformation. Price it at 2× your standard.`,priority:'now'},{title:'Message your existing clients personally',desc:'Notify them of the change. Offer a founding-client window to lock in current rates. This builds loyalty, not resentment.',priority:'now'}],
+    brand_visibility:[{title:'Commit to a weekly content rhythm',desc:'One piece of content per week minimum. Behind the scenes, results, process, expertise. Volume matters early — done beats perfect.',priority:'now'},{title:'Run your first paid ad',desc:`Small budget, single message, direct response. A 15-second video. One clear offer. Link directly to booking. ${cur}100–200/month is enough to test.`,priority:'soon'},{title:'Get one press or partnership mention',desc:'One local publication, one complementary business, one guest spot. External validation accelerates trust faster than owned content alone.',priority:'soon'}],
+    retention:[{title:'Build a follow-up sequence',desc:'Every client gets a personal follow-up after their first visit. Not a template — a message that references their situation. This alone doubles return rates.',priority:'now'},{title:'Create a membership or retainer offer',desc:`A fixed monthly payment for recurring access: ${svcList} on a schedule. Predictable for them. Predictable revenue for you.`,priority:'now'},{title:'Improve the in-session experience',desc:'What does a client leave with? A card, a recommendation, a feeling of being seen. Every touchpoint is a retention signal.',priority:'soon'}],
+    costs:[{title:'Full cost audit this week',desc:"List every fixed and variable cost. Categorise as essential, reducible, or cuttable. You can't manage what you haven't mapped.",priority:'now'},{title:'Renegotiate your largest cost',desc:`Your main cost is ${fmt(c.costNow)}/month. Is there a multi-month deal? A shared cost? An alternative? Even a 20% reduction changes your margin significantly.`,priority:'now'},{title:'Increase revenue per hour, not just total revenue',desc:'Price per hour is the real metric. Add higher-margin services. Remove low-margin ones that eat time.',priority:'soon'}],
+    scaling:[{title:'Document your processes',desc:'Everything you do manually and repeatedly should be documented. This is the prerequisite for delegation, automation, or hiring.',priority:'now'},{title:'Create a productised service',desc:'Package your most common service into a fixed-scope, fixed-price offer. Easier to sell, deliver, and delegate.',priority:'now'},{title:'Identify your first hire or contractor',desc:"What is the one thing you do that doesn't need to be you? That's the first role. Even 5 hours/week of delegation creates leverage.",priority:'soon'}],
+  };
+  const p1Actions = problemActions[c.problem]||problemActions['not_enough_clients'];
+  return [
+    {title:'Stabilise — Stop the Bleed',months:'Months 1–2',goal:'Cover costs. Prove the model works.',actions:[...p1Actions,{title:'Track your numbers weekly',desc:'Revenue, clients, conversion rate, net profit. A simple spreadsheet or note is enough. What you measure, you move.',priority:'now'}]},
+    {title:'Build — Signal and Systems',months:'Months 3–5',goal:'Make the business discoverable and repeatable.',actions:[{title:'Nail your one-line positioning',desc:`Who you help, how, and what changes for them. "${c.idealClient||'Define your ideal client'} who want ${c.strength||'your expertise'}." This shapes every message you send.`,priority:'soon'},{title:'Launch a content strategy',desc:'One platform. One content type. Weekly cadence. Show your expertise, your process, your results. Consistent over time builds inbound.',priority:'soon'},{title:'Add a second revenue stream',desc:c.services.length>1?`You have multiple services. Make sure your premium tier (${c.services[c.services.length-1]?.name||'highest value'}) is actively being sold — not just listed.`:'Create a complementary product or service that extends your core offer. Even a small add-on at every transaction compounds.',priority:'soon'},{title:'Hit your floor revenue target',desc:`${fmt(c.targetLow)}/month as a consistent, sustained baseline. Not a one-off spike.`,priority:'soon'}]},
+    {title:'Scale — Build Beyond Yourself',months:'Months 6–12',goal:"Build a business that doesn't depend entirely on you.",actions:[{title:'Develop a flagship offer',desc:'Your premium, most transformative service — packaged, priced, and marketed as the signature thing you do. This is what the brand is known for.',priority:'later'},{title:'Pursue strategic partnerships',desc:"Businesses that serve your ideal client and don't compete. Gyms, studios, firms, agencies — whoever your client already trusts. One partnership can outperform months of advertising.",priority:'later'},{title:'Plan for your ceiling',desc:`${c.vision?`Your vision: "${c.vision.substring(0,80)}..." — start planning the next step.`:"What does the business look like when you can't take on more personally? Products, team, licencing, or location — pick your model."}`,priority:'later'},{title:`Hit ${fmt(c.targetHigh)}/month`,desc:'Upper target sustained for 2+ consecutive months. This is the proof-of-concept moment for the full vision.',priority:'later'}]}
+  ];
+}
+
+function togglePhase(i) { document.getElementById(`phase-${i}`)?.classList.toggle('open'); }
+
+function populateRoadmap() {
+  const phases = generatePhases(config);
+  const track = document.getElementById('roadmap-track');
+  track.innerHTML = '';
+  const pClasses = ['p1','p2','p3'];
+  phases.forEach((phase,pi) => {
+    const phaseEl = document.createElement('div');
+    phaseEl.className = 'roadmap-phase';
+    const header = document.createElement('div');
+    header.className = 'rp-header';
+    header.innerHTML = `<div class="rp-badge ${pClasses[pi]}">Phase ${pi+1} — ${phase.title}</div><div class="rp-months">${phase.months}</div><div class="rp-line"></div>`;
+    phaseEl.appendChild(header);
+    const grid = document.createElement('div');
+    grid.className = 'ms-grid';
+    phase.actions.forEach((action,ai) => {
+      const msId = `ms-${pi}-${ai}`;
+      const status = milestoneStates[msId]||'pending';
+      const labels = {done:'Done',active:'In Progress',pending:'Pending',blocked:'Blocked'};
+      const card = document.createElement('div');
+      card.className = `ms-card status-${status}`;
+      card.id = `card-${msId}`;
+      card.innerHTML = `<div class="ms-top"><div class="ms-dot"></div><div class="ms-status-lbl">${labels[status]}</div></div><div class="ms-title">${action.title}</div><div class="ms-desc">${action.desc.substring(0,90)}${action.desc.length>90?'…':''}</div><div class="ms-actions"><button class="ms-btn b-done" onclick="setMsStatus('${msId}','done')">✓ Done</button><button class="ms-btn b-active" onclick="setMsStatus('${msId}','active')">▶ Active</button><button class="ms-btn b-blocked" onclick="setMsStatus('${msId}','blocked')">✕ Blocked</button><button class="ms-btn" onclick="setMsStatus('${msId}','pending')">↺ Reset</button></div>`;
+      grid.appendChild(card);
+    });
+    phaseEl.appendChild(grid);
+    track.appendChild(phaseEl);
+  });
+}
+
+function setMsStatus(id, status) {
+  milestoneStates[id] = status;
+  saveMsStates();
+  const card = document.getElementById(`card-${id}`);
+  if (!card) return;
+  const labels = {done:'Done',active:'In Progress',pending:'Pending',blocked:'Blocked'};
+  card.className = `ms-card status-${status}`;
+  card.querySelector('.ms-status-lbl').textContent = labels[status];
+}
+
+function saveMsStates() { try { localStorage.setItem('gb_ms', JSON.stringify(milestoneStates)); } catch(e) {} }
+function loadMsStates() { try { const s = localStorage.getItem('gb_ms'); if (s) milestoneStates = JSON.parse(s); } catch(e) {} }
+
+function populateCalc() {
+  const grid = document.getElementById('calc-grid');
+  const c = config;
+  grid.innerHTML = `
+    <div class="calc-panel">
+      <h3>Current Model</h3>
+      <div class="calc-service-header">Service · clients per week · × current price</div>
+      ${c.services.map((s,i)=>`<div class="calc-row"><div class="calc-lbl">${s.name} (@ ${fmt(s.currentPrice||0)})</div><input class="calc-input" id="c_qty_${i}" type="number" value="2" oninput="calcIncome()"></div>`).join('')}
+      ${c.services.length===0?`<div class="calc-row"><div class="calc-lbl">Revenue / week</div><input class="calc-input" id="c_manual_rev" type="number" value="${Math.round(c.revNow/4.33)}" oninput="calcIncome()"></div>`:''}
+      ${c.costNow?`<div class="calc-row"><div class="calc-lbl">Fixed cost / week</div><input class="calc-input" id="c_fixed" type="number" value="${Math.round(c.costNow/4.33)}" oninput="calcIncome()" style="opacity:0.5;"></div>`:''}
+      <div class="calc-result"><div class="calc-result-lbl">Net Monthly</div><div class="calc-result-val neg" id="c_result">—</div></div>
+    </div>
+    <div class="calc-panel">
+      <h3>Target Model</h3>
+      <div class="calc-service-header">Service · clients per week · × target price</div>
+      ${c.services.map((s,i)=>`<div class="calc-row"><div class="calc-lbl">${s.name} (@ ${fmt(s.targetPrice||s.currentPrice||0)})</div><input class="calc-input" id="t_qty_${i}" type="number" value="4" oninput="calcIncome()"></div>`).join('')}
+      ${c.services.length===0?`<div class="calc-row"><div class="calc-lbl">Revenue / week (target)</div><input class="calc-input" id="t_manual_rev" type="number" value="${Math.round(c.targetLow/4.33)}" oninput="calcIncome()"></div>`:''}
+      ${c.costNow?`<div class="calc-row"><div class="calc-lbl">Fixed cost / week</div><input class="calc-input" id="t_fixed" type="number" value="${Math.round(c.costNow/4.33)}" oninput="calcIncome()" style="opacity:0.5;"></div>`:''}
+      <div class="calc-result"><div class="calc-result-lbl">Net Monthly</div><div class="calc-result-val" id="t_result">—</div></div>
+    </div>
+  `;
+  calcIncome();
+}
+
+function calcIncome() {
+  const c = config;
+  const val = id => parseFloat(document.getElementById(id)?.value)||0;
+  let cRev=0, tRev=0;
+  if (c.services.length>0) { c.services.forEach((s,i)=>{ cRev+=val(`c_qty_${i}`)*(s.currentPrice||0); tRev+=val(`t_qty_${i}`)*(s.targetPrice||s.currentPrice||0); }); }
+  else { cRev=val('c_manual_rev'); tRev=val('t_manual_rev'); }
+  const weeklyFixed = c.costNow?(c.costNow/4.33):0;
+  const cNet=(cRev*4.33)-(weeklyFixed*4.33);
+  const tNet=(tRev*4.33)-(weeklyFixed*4.33);
+  const uplift=tNet-cNet;
+  const cEl=document.getElementById('c_result');
+  const tEl=document.getElementById('t_result');
+  const uEl=document.getElementById('uplift-val');
+  if (cEl) { cEl.textContent=fmt(cNet); cEl.className='calc-result-val '+(cNet<0?'neg':cNet<1000?'mid':''); }
+  if (tEl) { tEl.textContent=fmt(tNet); tEl.className='calc-result-val '+(tNet<c.targetLow?'mid':''); }
+  if (uEl) uEl.textContent=`+${fmt(uplift)}`;
+}
+
+function populateVision() {
+  const c = config;
+  const grid = document.getElementById('vision-grid');
+  const items = [
+    {title:'The Foundation Service',desc:`${c.services.length?c.services[0].name:'Your core service'} as the premium offer — fully priced, fully experienced. This is where the brand lives and where trust is built.`},
+    {title:'Consistent Income Floor',desc:`${fmt(c.targetLow)}/month as the baseline — not a ceiling. Every system, price, and decision is built to make this the floor, not the goal.`},
+    {title:'The Ideal Client — Owned',desc:`${c.idealClient||'Your ideal client'} choosing you by reputation, not by accident. This is what brand-building delivers — inbound demand.`},
+    {title:'Premium Positioning',desc:`${c.strength||'Your expertise'} recognised as premium in your market. No competing on price. Competing on value.`},
+    {title:'The Scale Vehicle',desc:c.vision?c.vision:'Products, team, partnership, or digital — the lever that takes revenue beyond your personal time capacity.'},
+    {title:`${fmt(c.targetHigh)}/Month Achieved`,desc:`Upper target hit for 2+ consecutive months. Not a lucky spike — a structural outcome of the systems you've built.`},
+  ];
+  grid.innerHTML = items.map((item,i)=>`<div class="vision-card"><div class="vision-num">0${i+1}</div><div class="vision-title">${item.title}</div><div class="vision-desc">${item.desc}</div></div>`).join('');
+  if (c.vision) document.getElementById('vision-quote').innerHTML = `"The goal isn't just more revenue — it's building a business that works <strong>${c.vision.substring(0,60)}${c.vision.length>60?'…':''}</strong>"`;
+}
+
+function saveNotes() {
+  try {
+    ['wins','blocks','ideas','clients'].forEach(k=>{ const el=document.getElementById(`note-${k}`); if(el) localStorage.setItem(`gb_note_${k}`,el.value); });
+    const c=document.getElementById('save-confirm');
+    if(c){c.style.display='inline';setTimeout(()=>c.style.display='none',2200);}
+  } catch(e) {}
+}
+
+function loadNotes() {
+  try { ['wins','blocks','ideas','clients'].forEach(k=>{ const el=document.getElementById(`note-${k}`); const s=localStorage.getItem(`gb_note_${k}`); if(el&&s) el.value=s; }); } catch(e) {}
+}
+
+function saveConfig() { try { localStorage.setItem('gb_config', JSON.stringify(config)); } catch(e) {} }
+
+function loadSavedConfig() {
+  try { const s=localStorage.getItem('gb_config'); if(s){config=JSON.parse(s);return true;} } catch(e) {}
+  return false;
+}
+
+function showTab(id, btn) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+loadMsStates();
+if (loadSavedConfig()) {
+  document.getElementById('setup-overlay').classList.add('hidden');
+  applyTheme();
+  populateDiagnosis();
+  populatePlan();
+  populateRoadmap();
+  populateCalc();
+  populateVision();
+  loadNotes();
+}
+</script>
+</body>
+</html>
