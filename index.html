@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dash OS — powered by Dandelaion</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #f5f5f3;
+    min-height: 100vh;
+    color: #111;
+  }
+
+  .hp-nav {
+    background: #fff;
+    border-bottom: 1px solid #e8e8e6;
+    padding: 0 40px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .hp-logo { font-weight: 700; font-size: 14px; letter-spacing: 0.08em; color: #111; text-transform: uppercase; }
+  .hp-logo span { color: #c05c1a; }
+  .hp-powered { font-size: 10px; color: #bbb; letter-spacing: 0.06em; }
+
+  .hp-hero {
+    background: #fff;
+    border-bottom: 1px solid #e8e8e6;
+    padding: 72px 40px 60px;
+    text-align: center;
+  }
+  .hp-h1 {
+    font-size: 48px;
+    font-weight: 700;
+    color: #111;
+    line-height: 1.06;
+    letter-spacing: -0.025em;
+    margin-bottom: 16px;
+  }
+  .hp-h1 em { color: #c05c1a; font-style: italic; font-weight: 600; }
+  .hp-sub {
+    font-size: 14px;
+    color: #999;
+    max-width: 440px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  .hp-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 48px 40px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .hp-card {
+    background: #fff;
+    border: 1px solid #e8e8e6;
+    border-radius: 12px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .hp-card:hover { border-color: #ccc; transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+  .hp-card.blue { border-top: 3px solid #1a5fc8; }
+  .hp-card.green { border-top: 3px solid #3a8a2a; }
+
+  .hp-card-tag {
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+  .hp-card.blue .hp-card-tag { color: #1a5fc8; }
+  .hp-card.green .hp-card-tag { color: #3a8a2a; }
+
+  .hp-card-num {
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin-bottom: 12px;
+    opacity: 0.08;
+  }
+  .hp-card.blue .hp-card-num { color: #1a5fc8; }
+  .hp-card.green .hp-card-num { color: #3a8a2a; }
+
+  .hp-card-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  .hp-card-title em { font-style: italic; }
+  .hp-card.blue .hp-card-title em { color: #1a5fc8; }
+  .hp-card.green .hp-card-title em { color: #3a8a2a; }
+
+  .hp-card-desc {
+    font-size: 12px;
+    color: #999;
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  .hp-card-audience {
+    font-size: 11px;
+    color: #bbb;
+    margin-bottom: 24px;
+    font-style: italic;
+  }
+
+  .hp-card-features {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 28px;
+    flex: 1;
+  }
+  .hp-card-feature {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #888;
+  }
+  .hp-card-feature::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .hp-card.blue .hp-card-feature::before { background: #1a5fc8; }
+  .hp-card.green .hp-card-feature::before { background: #3a8a2a; }
+
+  .hp-card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 11px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    text-decoration: none;
+    align-self: flex-start;
+  }
+  .hp-card.blue .hp-card-cta { background: #1a5fc8; color: #fff; }
+  .hp-card.blue .hp-card-cta:hover { background: #1450a8; }
+  .hp-card.green .hp-card-cta { background: #3a8a2a; color: #fff; }
+  .hp-card.green .hp-card-cta:hover { background: #2d6e20; }
+
+  .hp-footer {
+    padding: 24px 40px;
+    text-align: center;
+    border-top: 1px solid #e8e8e6;
+    background: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .hp-footer-brand { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #ccc; font-weight: 700; }
+  .hp-footer-brand span { color: #c05c1a; }
+  .hp-footer-note { font-size: 10px; color: #ccc; font-style: italic; }
+  .hp-footer-powered { font-size: 10px; color: #ccc; }
+
+  @media (max-width: 700px) {
+    .hp-nav { padding: 0 18px; }
+    .hp-hero { padding: 44px 18px 36px; }
+    .hp-h1 { font-size: 32px; }
+    .hp-cards { grid-template-columns: 1fr; padding: 24px 18px; }
+    .hp-footer { padding: 16px 18px; flex-direction: column; gap: 6px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="hp-nav">
+  <div class="hp-logo">DASH<span>OS</span></div>
+  <div class="hp-powered">powered by Dandelaion</div>
+</nav>
+
+<div class="hp-hero">
+  <h1 class="hp-h1">Where are you in your<br><em>business journey?</em></h1>
+  <p class="hp-sub">Choose the tool that fits where you are right now. Everything you need to start, understand, and grow — in one place.</p>
+</div>
+
+<div class="hp-cards">
+
+  <a class="hp-card green" href="/clarity">
+    <div class="hp-card-tag">Step 01 — Start here</div>
+    <div class="hp-card-num">01</div>
+    <div class="hp-card-title">Idea &amp; <em>Clarity</em></div>
+    <div class="hp-card-desc">You have an idea but you're not sure if it's viable, who it's really for, or what makes it worth building. Get clear before you invest time or money.</div>
+    <div class="hp-card-audience">"I have an idea but I don't know where to start."</div>
+    <div class="hp-card-features">
+      <div class="hp-card-feature">Validate your idea against a real market need</div>
+      <div class="hp-card-feature">Define who it's for and why they'd care</div>
+      <div class="hp-card-feature">Get your one-liner positioning nailed</div>
+      <div class="hp-card-feature">AI-generated clarity report specific to your idea</div>
+    </div>
+    <div class="hp-card-cta">Get Clarity →</div>
+  </a>
+
+  <a class="hp-card blue" href="/dashboard">
+    <div class="hp-card-tag">Step 02 — Already running</div>
+    <div class="hp-card-num">02</div>
+    <div class="hp-card-title">The <em>Real</em> Audit</div>
+    <div class="hp-card-desc">You have a business running but something isn't working — not enough clients, underpriced, not growing. Get a diagnosis and a plan built around your actual numbers.</div>
+    <div class="hp-card-audience">"I'm running but I'm stuck. I need to know what to fix."</div>
+    <div class="hp-card-features">
+      <div class="hp-card-feature">Honest diagnosis of where your business actually is</div>
+      <div class="hp-card-feature">Personalised plan across three growth phases</div>
+      <div class="hp-card-feature">Income calculator and roadmap tracker</div>
+      <div class="hp-card-feature">AI-generated insight specific to your situation</div>
+    </div>
+    <div class="hp-card-cta">Start the Audit →</div>
+  </a>
+
+</div>
+
+<footer class="hp-footer">
+  <div class="hp-footer-brand">DASH<span>OS</span></div>
+  <div class="hp-footer-note">Your data stays private — saved only to your browser. No account needed.</div>
+  <div class="hp-footer-powered">powered by Dandelaion</div>
+</footer>
+
+</body>
+</html>
