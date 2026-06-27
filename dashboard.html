@@ -1747,14 +1747,8 @@ loadMsStates();
 if (loadSavedConfig()) {
   document.getElementById('setup-overlay').classList.add('hidden');
   applyTheme();
-  const savedAi = loadAiOutput();
-  if (savedAi) {
-    populateDiagnosisFromAI(savedAi);
-    populatePlanFromAI(savedAi);
-  } else {
-    populateDiagnosis();
-    populatePlan();
-  }
+  populateDiagnosis();
+  populatePlan();
   populateRoadmap();
   populateCalc();
   populateVision();
