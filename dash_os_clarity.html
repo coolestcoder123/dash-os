@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dash OS — Idea & Clarity</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #3a8a2a;
+    --accent-light: #4aa838;
+    --accent-rgb: 58,138,42;
+    --orange: #c05c1a;
+    --blue: #1a5fc8;
+    --ruby: #a32d2d;
+    --emerald: #3a8a2a;
+    --bg-0: #f5f5f3;
+    --bg-1: #ffffff;
+    --bg-2: #f7f7f5;
+    --bg-3: #ebebea;
+    --text-1: #111111;
+    --text-2: #555555;
+    --text-3: #999999;
+    --text-4: #bbbbbb;
+    --border: #e8e8e6;
+    --border-strong: #ccccca;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body { background: var(--bg-0); color: var(--text-1); font-family: 'DM Sans', sans-serif; font-size: 13px; line-height: 1.7; min-height: 100vh; overflow-x: hidden; }
+
+  /* ============================================================ WIZARD ============================================================ */
+  #setup-overlay { position: fixed; inset: 0; background: var(--bg-0); z-index: 900; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  #setup-overlay.hidden { display: none; }
+
+  .setup-box { width: 100%; max-width: 680px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; animation: fadeUp 0.5s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  .setup-header { padding: 32px 36px 24px; border-bottom: 1px solid var(--border); background: var(--bg-1); }
+  .setup-step-indicator { display: flex; gap: 6px; margin-bottom: 20px; }
+  .step-dot { width: 28px; height: 3px; background: var(--bg-3); border-radius: 2px; transition: background 0.3s; }
+  .step-dot.active { background: var(--accent); }
+  .step-dot.done { background: var(--blue); }
+
+  .setup-header h2 { font-size: 26px; font-weight: 700; margin-bottom: 6px; color: var(--text-1); letter-spacing: -0.02em; }
+  .setup-header h2 em { color: var(--accent); font-style: italic; }
+  .setup-header p { font-size: 13px; color: var(--text-3); }
+
+  .setup-body { padding: 28px 36px; }
+  .setup-step { display: none; }
+  .setup-step.active { display: block; }
+  .setup-field { margin-bottom: 20px; }
+
+  .setup-label { display: block; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; font-weight: 600; }
+
+  .setup-input { width: 100%; background: var(--bg-2); border: 1px solid var(--border); color: var(--text-1); font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 11px 14px; outline: none; transition: border-color 0.2s; border-radius: 6px; }
+  .setup-input:focus { border-color: var(--accent); }
+  .setup-input::placeholder { color: var(--text-4); }
+
+  textarea.setup-input { resize: vertical; min-height: 80px; line-height: 1.6; }
+
+  .setup-select { width: 100%; background: var(--bg-2); border: 1px solid var(--border); color: var(--text-1); font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 11px 14px; outline: none; cursor: pointer; border-radius: 6px; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
+  .setup-select:focus { border-color: var(--accent); }
+  .setup-select option { background: var(--bg-1); }
+
+  .setup-footer { padding: 20px 36px 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .setup-powered { font-size: 10px; color: var(--text-4); letter-spacing: 0.06em; }
+
+  .btn-primary { background: var(--accent); color: #fff; border: none; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 11px 26px; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
+  .btn-primary:hover { background: var(--accent-light); }
+
+  .btn-ghost { background: transparent; color: var(--text-3); border: 1px solid var(--border); font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 10px 18px; cursor: pointer; border-radius: 6px; transition: all 0.2s; }
+  .btn-ghost:hover { color: var(--text-1); border-color: var(--border-strong); }
+
+  /* ============================================================ NAV ============================================================ */
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(255,255,255,0.97); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 0 24px; height: 52px; display: flex; align-items: center; gap: 16px; }
+
+  .nav-logo { font-weight: 700; font-size: 14px; letter-spacing: 0.08em; color: var(--text-1); text-transform: uppercase; white-space: nowrap; flex-shrink: 0; }
+  .nav-logo span { color: var(--orange); }
+  .nav-tool { font-size: 10px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; border-left: 1px solid var(--border); padding-left: 14px; flex-shrink: 0; }
+  .nav-powered { font-size: 10px; color: var(--text-4); letter-spacing: 0.05em; margin-left: auto; flex-shrink: 0; }
+  .nav-edit-btn { font-family: 'DM Sans', sans-serif; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; padding: 5px 11px; background: transparent; border: 1px solid var(--border); color: var(--text-3); cursor: pointer; border-radius: 5px; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; }
+  .nav-edit-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ============================================================ MAIN ============================================================ */
+  main { padding-top: 52px; animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .hero { position: relative; padding: 52px 40px 40px; border-bottom: 1px solid var(--border); background: var(--bg-1); }
+  .hero-tag { font-size: 10px; letter-spacing: 0.18em; color: var(--accent); text-transform: uppercase; margin-bottom: 14px; font-weight: 600; }
+  .hero h1 { font-size: clamp(32px, 5vw, 56px); font-weight: 700; line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 8px; color: var(--text-1); }
+  .hero h1 em { color: var(--accent); font-style: italic; font-weight: 600; }
+  .hero-sub { font-size: 13px; color: var(--text-3); margin-top: 10px; max-width: 500px; }
+
+  .idea-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 36px; }
+  .idea-block { background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; padding: 18px 16px; }
+  .idea-label { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-4); margin-bottom: 7px; font-weight: 600; }
+  .idea-value { font-size: 14px; font-weight: 700; color: var(--text-1); line-height: 1.3; }
+  .idea-value.green { color: var(--accent); }
+  .idea-value.blue { color: var(--blue); }
+  .idea-value.orange { color: var(--orange); }
+
+  .section-header { padding: 38px 40px 24px; border-bottom: 1px solid var(--border); background: var(--bg-1); }
+  .section-eyebrow { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text-4); margin-bottom: 8px; font-weight: 600; }
+  .section-title { font-size: clamp(22px, 3.5vw, 38px); font-weight: 700; line-height: 1.08; letter-spacing: -0.02em; color: var(--text-1); }
+  .section-title em { color: var(--accent); font-style: italic; font-weight: 600; }
+
+  .clarity-grid { padding: 28px 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .clarity-card { background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; padding: 22px; border-top: 3px solid transparent; }
+  .clarity-card.green { border-top-color: var(--emerald); }
+  .clarity-card.blue { border-top-color: var(--blue); }
+  .clarity-card.orange { border-top-color: var(--orange); }
+  .clarity-card.red { border-top-color: var(--ruby); }
+
+  .card-title { font-weight: 700; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 14px; }
+  .clarity-card.green .card-title { color: var(--emerald); }
+  .clarity-card.blue .card-title { color: var(--blue); }
+  .clarity-card.orange .card-title { color: var(--orange); }
+  .clarity-card.red .card-title { color: var(--ruby); }
+
+  .diag-table { width: 100%; border-collapse: collapse; }
+  .diag-table tr { border-bottom: 1px solid var(--bg-3); }
+  .diag-table tr:last-child { border-bottom: none; }
+  .diag-table td { padding: 7px 0; font-size: 12px; vertical-align: top; }
+  .diag-table td:first-child { color: var(--text-4); width: 45%; font-size: 11px; }
+  .diag-table td:last-child { color: var(--text-1); font-weight: 600; }
+
+  .pill { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 9px; letter-spacing: 0.04em; margin-left: 4px; font-weight: 700; }
+  .pill.red { background: rgba(163,45,45,0.1); color: var(--ruby); border: 1px solid rgba(163,45,45,0.2); }
+  .pill.green { background: rgba(58,138,42,0.1); color: var(--emerald); border: 1px solid rgba(58,138,42,0.2); }
+
+  .insight-bar { margin: 0 40px 24px; padding: 20px 24px; background: var(--bg-1); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; font-size: 15px; font-style: italic; line-height: 1.65; color: var(--text-2); }
+  .insight-bar strong { color: var(--blue); font-style: normal; font-weight: 700; }
+
+  .next-step-bar { margin: 0 40px 40px; padding: 22px 26px; background: var(--bg-1); border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .next-step-text { flex: 1; }
+  .next-step-label { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-4); font-weight: 600; margin-bottom: 5px; }
+  .next-step-desc { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+  .next-step-desc strong { color: var(--text-1); }
+  .next-step-cta { background: var(--blue); color: #fff; border: none; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 11px 22px; cursor: pointer; border-radius: 6px; transition: all 0.2s; white-space: nowrap; text-decoration: none; display: inline-block; }
+  .next-step-cta:hover { background: #1450a8; }
+
+  .page-footer { margin-top: 40px; padding: 20px 40px; border-top: 1px solid var(--border); background: var(--bg-1); display: flex; justify-content: space-between; align-items: center; }
+  .footer-brand { font-weight: 700; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-4); }
+  .footer-brand span { color: var(--orange); }
+  .footer-note { font-size: 10px; color: var(--text-4); font-style: italic; }
+  .footer-powered { font-size: 10px; color: var(--text-4); }
+
+  @keyframes loadpulse { 0%,100%{transform:scale(1);opacity:0.4;} 50%{transform:scale(1.4);opacity:1;} }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg-0); }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+  @media (max-width: 820px) {
+    nav { padding: 0 14px; gap: 10px; }
+    .nav-powered { display: none; }
+    .hero { padding: 28px 18px; }
+    .idea-summary { grid-template-columns: 1fr; }
+    .section-header { padding: 22px 18px 16px; }
+    .clarity-grid { grid-template-columns: 1fr; padding: 18px; }
+    .insight-bar { margin: 0 18px 18px; }
+    .next-step-bar { margin: 0 18px 28px; flex-direction: column; align-items: flex-start; }
+    .page-footer { padding: 16px 18px; flex-direction: column; gap: 4px; text-align: center; }
+    .setup-box { border: none; border-radius: 0; }
+    .setup-header, .setup-body, .setup-footer { padding-left: 20px; padding-right: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- WIZARD -->
+<div id="setup-overlay">
+  <div class="setup-box">
+    <div class="setup-header">
+      <div class="setup-step-indicator">
+        <div class="step-dot active" id="sdot-0"></div>
+        <div class="step-dot" id="sdot-1"></div>
+        <div class="step-dot" id="sdot-2"></div>
+      </div>
+      <h2 id="setup-title">What's your <em>idea?</em></h2>
+      <p id="setup-desc">Answer honestly. The more specific you are, the more useful your clarity report will be.</p>
+    </div>
+
+    <div class="setup-body">
+
+      <!-- STEP 0 — The Idea -->
+      <div class="setup-step active" id="step-0">
+        <div class="setup-field">
+          <label class="setup-label">Your Name</label>
+          <input class="setup-input" id="c_name" type="text" placeholder="First name or full name">
+        </div>
+        <div class="setup-field">
+          <label class="setup-label">Describe your idea in one sentence</label>
+          <input class="setup-input" id="c_idea" type="text" placeholder="e.g. A membership for freelance designers to find better clients">
+        </div>
+        <div class="setup-field">
+          <label class="setup-label">What stage are you at?</label>
+          <select class="setup-select" id="c_stage">
+            <option value="just_an_idea">Just an idea — haven't started yet</option>
+            <option value="researching">Researching — trying to validate it</option>
+            <option value="building">Building — working on it but not launched</option>
+            <option value="soft_launched">Soft launched — a few early users or customers</option>
+          </select>
+        </div>
+        <div class="setup-field">
+          <label class="setup-label">What industry or space is it in?</label>
+          <input class="setup-input" id="c_industry" type="text" placeholder="e.g. Health & wellness, B2B SaaS, Education, Fashion…">
+        </div>
+      </div>
+
+      <!-- STEP 1 — The Person & Problem -->
+      <div class="setup-step" id="step-1">
+        <div class="setup-field">
+          <label class="setup-label">Who is this for? Describe them specifically</label>
+          <input class="setup-input" id="c_who" type="text" placeholder="e.g. Freelance graphic designers who struggle to find consistent clients">
+        </div>
+        <div class="setup-field">
+          <label class="setup-label">What problem does it solve for them?</label>
+          <textarea class="setup-input" id="c_problem" placeholder="e.g. Freelancers spend too much time hunting for work and not enough doing it. They need a reliable pipeline without using agencies."></textarea>
+        </div>
+        <div class="setup-field">
+          <label class="setup-label">What do people use today instead?</label>
+          <input class="setup-input" id="c_alternatives" type="text" placeholder="e.g. Upwork, cold outreach, word of mouth, Instagram">
+        </div>
+      </div>
+
+      <!-- STEP 2 — The Thinking -->
+      <div class="setup-step" id="step-2">
+        <div class="setup-field">
+          <label class="setup-label">Why are you the right person to build this?</label>
+          <input class="setup-input" id="c_why_you" type="text" placeholder="e.g. I've been a freelance designer for 6 years and lived this problem">
+        </div>
+        <div class="setup-field">
+          <label class="setup-label">What's your biggest uncertainty about it right now?</label>
+          <input class="setup-input" id="c_uncertainty" type="text" placeholder="e.g. I don't know if people will pay for it or just use free options">
+        </div>
+        <div class="setup-field">
+          <label class="setup-label">What does success look like in 12 months?</label>
+          <input class="setup-input" id="c_success" type="text" placeholder="e.g. 200 paying members, £5k/month revenue, working on it full time">
+        </div>
+      </div>
+
+    </div>
+
+    <div class="setup-footer">
+      <button class="btn-ghost" id="setup-back-btn" onclick="setupBack()" style="display:none;">← Back</button>
+      <div class="setup-powered">powered by Dandelaion</div>
+      <button class="btn-primary" id="setup-next-btn" onclick="setupNext()">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="/" style="text-decoration:none;"><div class="nav-logo">DASH<span>OS</span></div></a>
+  <div class="nav-tool">Idea & Clarity</div>
+  <div class="nav-powered">powered by Dandelaion</div>
+  <button class="nav-edit-btn" onclick="openSetup()">✎ Edit</button>
+</nav>
+
+<!-- MAIN OUTPUT -->
+<main id="main-output" style="display:none;">
+
+  <div class="hero">
+    <div class="hero-tag" id="hero-tag">Dash OS — Idea & Clarity</div>
+    <h1>Your <em>Clarity</em> Report</h1>
+    <p class="hero-sub">An honest read on your idea — what's strong, what's missing, and what to do first.</p>
+    <div class="idea-summary">
+      <div class="idea-block">
+        <div class="idea-label">The Idea</div>
+        <div class="idea-value green" id="sum-idea">—</div>
+      </div>
+      <div class="idea-block">
+        <div class="idea-label">For</div>
+        <div class="idea-value blue" id="sum-who">—</div>
+      </div>
+      <div class="idea-block">
+        <div class="idea-label">Stage</div>
+        <div class="idea-value orange" id="sum-stage">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <div class="section-eyebrow">Idea Assessment</div>
+    <div class="section-title">What the thinking <em>reveals</em></div>
+  </div>
+
+  <div class="clarity-grid">
+    <div class="clarity-card green">
+      <div class="card-title">✦ The Strengths</div>
+      <table class="diag-table" id="card-strengths"></table>
+    </div>
+    <div class="clarity-card red">
+      <div class="card-title">⚠ The Gaps</div>
+      <table class="diag-table" id="card-gaps"></table>
+    </div>
+    <div class="clarity-card blue">
+      <div class="card-title">◈ The Positioning</div>
+      <table class="diag-table" id="card-positioning"></table>
+    </div>
+    <div class="clarity-card orange">
+      <div class="card-title">◉ The First Move</div>
+      <table class="diag-table" id="card-firstmove"></table>
+    </div>
+  </div>
+
+  <div class="insight-bar" id="insight-bar">Building your clarity report…</div>
+
+  <div class="next-step-bar">
+    <div class="next-step-text">
+      <div class="next-step-label">Ready to go further?</div>
+      <div class="next-step-desc" id="next-step-desc">Once you've validated your idea, use <strong>The Real Audit</strong> to build your business diagnosis, income plan, and growth roadmap.</div>
+    </div>
+    <a class="next-step-cta" href="/dashboard">Start the Audit →</a>
+  </div>
+
+</main>
+
+<div class="page-footer" id="page-footer" style="display:none;">
+  <div class="footer-brand">DASH<span>OS</span></div>
+  <div class="footer-note">Your clarity report is saved to this browser</div>
+  <div class="footer-powered">powered by Dandelaion</div>
+</div>
+
+<script>
+let clarityConfig = {
+  name: '', idea: '', stage: '', industry: '',
+  who: '', problem: '', alternatives: '',
+  whyYou: '', uncertainty: '', success: '',
+};
+
+let setupStep = 0;
+const TOTAL_STEPS = 3;
+
+const stepTitles = [
+  ["What's your <em>idea?</em>", "Answer honestly. The more specific you are, the more useful your clarity report will be."],
+  ["Who is it <em>for?</em>", "A great idea solves a real problem for a specific person. Let's define that."],
+  ["What's the <em>thinking?</em>", "The hardest questions — but the most important ones to answer now."],
+];
+
+function setupNext() {
+  if (!validateStep(setupStep)) return;
+  if (setupStep < TOTAL_STEPS - 1) {
+    document.getElementById(`step-${setupStep}`).classList.remove('active');
+    setupStep++;
+    document.getElementById(`step-${setupStep}`).classList.add('active');
+    updateSetupUI();
+  } else {
+    buildClarity();
+    document.getElementById('setup-overlay').classList.add('hidden');
+  }
+}
+
+function setupBack() {
+  if (setupStep > 0) {
+    document.getElementById(`step-${setupStep}`).classList.remove('active');
+    setupStep--;
+    document.getElementById(`step-${setupStep}`).classList.add('active');
+    updateSetupUI();
+  }
+}
+
+function updateSetupUI() {
+  const [title, desc] = stepTitles[setupStep];
+  document.getElementById('setup-title').innerHTML = title;
+  document.getElementById('setup-desc').textContent = desc;
+  document.getElementById('setup-back-btn').style.display = setupStep > 0 ? 'block' : 'none';
+  document.getElementById('setup-next-btn').textContent = setupStep === TOTAL_STEPS - 1 ? 'Build My Clarity Report →' : 'Continue →';
+  for (let i = 0; i < TOTAL_STEPS; i++) {
+    const dot = document.getElementById(`sdot-${i}`);
+    dot.className = 'step-dot ' + (i < setupStep ? 'done' : i === setupStep ? 'active' : '');
+  }
+}
+
+function validateStep(step) {
+  if (step === 0) {
+    const idea = document.getElementById('c_idea').value.trim();
+    if (!idea) { flashInput('c_idea'); return false; }
+  }
+  if (step === 1) {
+    const who = document.getElementById('c_who').value.trim();
+    if (!who) { flashInput('c_who'); return false; }
+  }
+  return true;
+}
+
+function flashInput(id) {
+  const el = document.getElementById(id);
+  el.style.borderColor = 'var(--ruby)';
+  el.focus();
+  setTimeout(() => el.style.borderColor = '', 1200);
+}
+
+function openSetup() { document.getElementById('setup-overlay').classList.remove('hidden'); }
+
+const stageLabels = {
+  just_an_idea: 'Just an idea',
+  researching: 'Researching',
+  building: 'Building',
+  soft_launched: 'Soft launched',
+};
+
+async function buildClarity() {
+  clarityConfig.name = document.getElementById('c_name').value.trim();
+  clarityConfig.idea = document.getElementById('c_idea').value.trim();
+  clarityConfig.stage = document.getElementById('c_stage').value;
+  clarityConfig.industry = document.getElementById('c_industry').value.trim();
+  clarityConfig.who = document.getElementById('c_who').value.trim();
+  clarityConfig.problem = document.getElementById('c_problem').value.trim();
+  clarityConfig.alternatives = document.getElementById('c_alternatives').value.trim();
+  clarityConfig.whyYou = document.getElementById('c_why_you').value.trim();
+  clarityConfig.uncertainty = document.getElementById('c_uncertainty').value.trim();
+  clarityConfig.success = document.getElementById('c_success').value.trim();
+
+  const output = document.getElementById('main-output');
+  const footer = document.getElementById('page-footer');
+  output.style.display = 'block';
+  footer.style.display = 'flex';
+
+  document.getElementById('hero-tag').textContent = `Dash OS — Idea & Clarity${clarityConfig.name ? ' · ' + clarityConfig.name : ''}`;
+  document.getElementById('sum-idea').textContent = clarityConfig.idea || '—';
+  document.getElementById('sum-who').textContent = clarityConfig.who || '—';
+  document.getElementById('sum-stage').textContent = stageLabels[clarityConfig.stage] || '—';
+
+  showLoadingState();
+
+  try {
+    const response = await fetch('/api/clarity', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ config: clarityConfig })
+    });
+    const aiData = await response.json();
+    if (aiData.error) throw new Error(aiData.error);
+    saveClarityOutput(aiData);
+    renderClarityFromAI(aiData);
+  } catch (error) {
+    console.error('AI clarity failed, falling back to template:', error);
+    renderClarityTemplate();
+  }
+
+  hideLoadingState();
+  saveConfig();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showLoadingState() {
+  const hero = document.querySelector('.hero');
+  if (hero) {
+    hero.style.position = 'relative';
+    const loader = document.createElement('div');
+    loader.id = 'ai-loading';
+    loader.style.cssText = 'position:absolute;inset:0;background:rgba(255,255,255,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:10;border-radius:0;';
+    loader.innerHTML = `
+      <div style="display:flex;gap:6px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:#3a8a2a;animation:loadpulse 1.2s ease-in-out infinite;"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:#3a8a2a;animation:loadpulse 1.2s ease-in-out 0.2s infinite;"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:#3a8a2a;animation:loadpulse 1.2s ease-in-out 0.4s infinite;"></div>
+      </div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:13px;color:#999;letter-spacing:0.04em;">Building your clarity report…</div>
+    `;
+    hero.appendChild(loader);
+  }
+}
+
+function hideLoadingState() {
+  document.getElementById('ai-loading')?.remove();
+}
+
+function renderClarityFromAI(ai) {
+  renderTable('card-strengths', ai.strengths);
+  renderTable('card-gaps', ai.gaps);
+  renderTable('card-positioning', ai.positioning);
+  renderTable('card-firstmove', ai.firstMove);
+  document.getElementById('insight-bar').innerHTML = `"${ai.insightQuote}"`;
+  if (ai.nextStepDesc) {
+    document.getElementById('next-step-desc').innerHTML = ai.nextStepDesc;
+  }
+}
+
+function renderTable(id, rows) {
+  if (!rows || !rows.length) return;
+  const t = document.getElementById(id);
+  t.innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.key}</td>
+      <td>${r.value}${r.pill ? ` <span class="pill ${r.pill}">${r.pill === 'red' ? '⚠' : '✓'}</span>` : ''}</td>
+    </tr>
+  `).join('');
+}
+
+function renderClarityTemplate() {
+  const c = clarityConfig;
+  const name = c.name ? c.name.split(' ')[0] : 'You';
+
+  renderTable('card-strengths', [
+    { key: 'Idea clarity', value: c.idea ? 'Defined' : 'Needs work', pill: c.idea ? 'green' : 'red' },
+    { key: 'Target person', value: c.who || 'Not defined', pill: c.who ? 'green' : 'red' },
+    { key: 'Your edge', value: c.whyYou || 'Not stated' },
+    { key: 'Vision', value: c.success ? 'Has direction' : 'Needs defining', pill: c.success ? 'green' : null },
+  ]);
+
+  renderTable('card-gaps', [
+    { key: 'Validation', value: 'Not yet done', pill: 'red' },
+    { key: 'Biggest uncertainty', value: c.uncertainty || 'Not stated', pill: 'red' },
+    { key: 'Competition', value: c.alternatives || 'Not mapped' },
+    { key: 'Revenue model', value: 'Not defined yet', pill: 'red' },
+  ]);
+
+  renderTable('card-positioning', [
+    { key: 'Audience', value: c.who || '—' },
+    { key: 'Problem', value: c.problem ? c.problem.substring(0, 40) + '…' : '—' },
+    { key: 'Vs alternatives', value: c.alternatives || '—' },
+    { key: 'Industry', value: c.industry || '—' },
+  ]);
+
+  renderTable('card-firstmove', [
+    { key: 'Priority', value: 'Validate before building', pill: 'red' },
+    { key: 'First action', value: 'Talk to 5 real potential users' },
+    { key: 'Key question', value: c.uncertainty || 'What would make someone pay?' },
+    { key: 'Timeline', value: 'This week — not next month' },
+  ]);
+
+  document.getElementById('insight-bar').innerHTML = `"${name} — the idea has direction. The question isn't whether it's good — it's whether the right person has the problem badly enough to pay for the solution. That's what you need to find out <strong>before</strong> building anything more."`;
+}
+
+function saveClarityOutput(data) { try { localStorage.setItem('cl_ai', JSON.stringify(data)); } catch(e) {} }
+function loadClarityOutput() { try { const s = localStorage.getItem('cl_ai'); if (s) return JSON.parse(s); } catch(e) {} return null; }
+function saveConfig() { try { localStorage.setItem('cl_config', JSON.stringify(clarityConfig)); } catch(e) {} }
+function loadSavedConfig() { try { const s = localStorage.getItem('cl_config'); if (s) { clarityConfig = JSON.parse(s); return true; } } catch(e) {} return false; }
+
+// Init
+if (loadSavedConfig()) {
+  document.getElementById('setup-overlay').classList.add('hidden');
+  document.getElementById('main-output').style.display = 'block';
+  document.getElementById('page-footer').style.display = 'flex';
+  document.getElementById('hero-tag').textContent = `Dash OS — Idea & Clarity${clarityConfig.name ? ' · ' + clarityConfig.name : ''}`;
+  document.getElementById('sum-idea').textContent = clarityConfig.idea || '—';
+  document.getElementById('sum-who').textContent = clarityConfig.who || '—';
+  document.getElementById('sum-stage').textContent = stageLabels[clarityConfig.stage] || '—';
+  const savedAi = loadClarityOutput();
+  if (savedAi) {
+    renderClarityFromAI(savedAi);
+  } else {
+    renderClarityTemplate();
+  }
+}
+</script>
+</body>
+</html>
